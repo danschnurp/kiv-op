@@ -24,6 +24,8 @@ encoding_first = tokenizer.encode(first_post, return_tensors="pt")
 # Encoding the second post into a sequence of integers.
 encoding_second = tokenizer.encode(second_post, return_tensors="pt")
 
+# Checking if the second post is shorter than the first post. If it is, it resizes the first post to the length of the
+# second post.
 if encoding_second.shape < encoding_first.shape:
     encoding_first = torch.from_numpy(np.resize(encoding_first, encoding_second.shape))
 elif encoding_second.shape > encoding_first.shape:
