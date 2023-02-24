@@ -1,7 +1,7 @@
-import numpy as np
-import torch
 from pandas import read_parquet
 from transformers import AutoTokenizer, AutoModel
+
+from MQDD_model import ClsHeadModelMQDD
 
 # https://drive.google.com/drive/folders/1JG6Fibvhs0Jz6JD83gwMqAmzUV9rsoX3
 # Reading the parquet file and storing it in a dataframe.
@@ -17,27 +17,21 @@ index = 9
 
 first_post = data.first_post[index]
 second_post = data.second_post[index]
-# first_post = data.first_post[4]
-# second_post = data.second_post[4]
 
 # Loading the model and tokenizer from the HuggingFace model hub.
 tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
-model = AutoModel.from_pretrained("UWB-AIR/MQDD-duplicates")
+encoder_instance = AutoModel.from_pretrained("UWB-AIR/MQDD-duplicates")
+classification_layers = ClsHeadModelMQDD("UWB-AIR/MQDD-duplicates")
 
 # Encoding the first post into a sequence of integers.
-encoding_first = tokenizer.encode(first_post, return_tensors="pt")  # todo ?
+encoding_first = tokenizer.encode(first_post, return_tensors="pt")
 
 # Encoding the second post into a sequence of integers.
 encoding_second = tokenizer.encode(second_post, return_tensors="pt")
 
+first_output_from_encoder = encoder_instance(encoding_first)
+second_output_from_encoder = encoder_instance(encoding_second)
 
+output = classification_layers.forward(first_output_from_encoder[1], second_output_from_encoder[1])
 
-output = model(encoding_first, encoding_second)
-
-# 0. duplicates - data[0]
-# 1. similar based on full-text search  data[1]
-# 2. similar based on tags  data[14]
-# 3. different -  data[4]
-# 4. accepted answer -  data[7]
-similarity = output[1].detach().numpy()
-print(similarity[:, :5])
+print(output)
