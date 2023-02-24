@@ -8,19 +8,12 @@ from transformers import AutoTokenizer, AutoModel
 data = read_parquet("SODD_dev.parquet.gzip")
 # Printing the number of rows in the dataframe, the first post, the second post, and the label.
 # print(data.count())
-
-# 0. duplicates - data[0]
-# 1. similar based on full-text search  data[1]
-# 2. similar based on tags  data[14]
-# 3. different -  data[4]
-# 4. accepted answer -  data[7]
 print(data.label[0:20])
 index = 9
 #  output                             # index - label.
 # [[0.9077884  0.99088585 0.9473789 ]] # 11 - 0.
 # [[0.94933444 0.9992542  0.95759284]] # 16 - 0.
 # [[0.9855168 0.9945899 0.9411869]]    # 10 - 3.
-
 
 first_post = data.first_post[index]
 second_post = data.second_post[index]
@@ -32,17 +25,12 @@ tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
 model = AutoModel.from_pretrained("UWB-AIR/MQDD-duplicates")
 
 # Encoding the first post into a sequence of integers.
-encoding_first = tokenizer.encode(first_post, return_tensors="pt")
+encoding_first = tokenizer.encode(first_post, return_tensors="pt")  # todo ?
 
 # Encoding the second post into a sequence of integers.
 encoding_second = tokenizer.encode(second_post, return_tensors="pt")
 
-# Checking if the second post is shorter than the first post. If it is, it resizes the first post to the length of the
-# second post.
-if encoding_second.shape < encoding_first.shape:
-    encoding_first = torch.from_numpy(np.resize(encoding_first, encoding_second.shape))
-elif encoding_second.shape > encoding_first.shape:
-    encoding_second = torch.from_numpy(np.resize(encoding_second, encoding_first.shape))
+
 
 output = model(encoding_first, encoding_second)
 
@@ -52,4 +40,4 @@ output = model(encoding_first, encoding_second)
 # 3. different -  data[4]
 # 4. accepted answer -  data[7]
 similarity = output[1].detach().numpy()
-print(similarity[:, :3])
+print(similarity[:, :5])
