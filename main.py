@@ -6,14 +6,8 @@ from MQDD_model import ClsHeadModelMQDD
 # https://drive.google.com/drive/folders/1JG6Fibvhs0Jz6JD83gwMqAmzUV9rsoX3
 # Reading the parquet file and storing it in a dataframe.
 data = read_parquet("SODD_dev.parquet.gzip")
-# Printing the number of rows in the dataframe, the first post, the second post, and the label.
-# print(data.count())
 print(data.label[0:20])
 index = 9
-#  output                             # index - label.
-# [[0.9077884  0.99088585 0.9473789 ]] # 11 - 0.
-# [[0.94933444 0.9992542  0.95759284]] # 16 - 0.
-# [[0.9855168 0.9945899 0.9411869]]    # 10 - 3.
 
 first_post = data.first_post[index]
 second_post = data.second_post[index]
