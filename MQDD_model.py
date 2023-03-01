@@ -24,20 +24,10 @@ class ClsHeadModelMQDD(torch.nn.Module):
         self._relu = torch.nn.ReLU()
         self._softmax = torch.nn.Softmax(dim=1)
 
-    def forward(self, input_dict):
-        input_1 = input_dict["input_1"]
-        input_1_mask = input_dict["input_1_mask"]
-        input_1_tok_types = input_dict["input_1_tok_types"]
-        input_2 = input_dict["input_2"]
-        input_2_mask = input_dict["input_2_mask"]
-        input_2_tok_types = input_dict["input_2_tok_types"]
+    def forward(self, input_1, input_2):
 
-        input_1, input_1_mask, input_1_tok_types = torch.squeeze(input_1), torch.squeeze(input_1_mask), torch.squeeze(
-            input_1_tok_types)
-        input_2, input_2_mask, input_2_tok_types = torch.squeeze(input_2), torch.squeeze(input_2_mask), torch.squeeze(
-            input_2_tok_types)
-        input_1_dense = self.bert_model(input_1, input_1_mask, None, token_type_ids=input_1_tok_types)[1]
-        input_2_dense = self.bert_model(input_2, input_2_mask, None, token_type_ids=input_2_tok_types)[1]
+        input_1_dense = self.bert_model(input_1, None)[1]
+        input_2_dense = self.bert_model(input_2, None)[1]
 
         concat = torch.cat((input_1_dense, input_2_dense), 1)
         x = self._dropout1(concat)
