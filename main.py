@@ -1,5 +1,6 @@
+import torch
 from pandas import read_parquet
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 
 from MQDD_model import ClsHeadModelMQDD
 
@@ -12,10 +13,7 @@ index = 9
 first_post = data.first_post[index]
 second_post = data.second_post[index]
 
-# Loading the model and tokenizer from the HuggingFace model hub.
 tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
-encoder_instance = AutoModel.from_pretrained("UWB-AIR/MQDD-duplicates")
-classification_layers = ClsHeadModelMQDD("UWB-AIR/MQDD-duplicates")
 
 # Encoding the first post into a sequence of integers.
 encoding_first = tokenizer.encode(first_post, return_tensors="pt")
@@ -23,9 +21,11 @@ encoding_first = tokenizer.encode(first_post, return_tensors="pt")
 # Encoding the second post into a sequence of integers.
 encoding_second = tokenizer.encode(second_post, return_tensors="pt")
 
-first_output_from_encoder = encoder_instance(encoding_first)
-second_output_from_encoder = encoder_instance(encoding_second)
+model = ClsHeadModelMQDD("UWB-AIR/MQDD-duplicates")
+ckpt = torch.load("model.pt",  map_location="cpu")
+del ckpt["model_state"]["bert_model.embeddings.position_ids"]
+model.load_state_dict(ckpt["model_state"])
 
-output = classification_layers.forward(first_output_from_encoder[1], second_output_from_encoder[1])
+# todo parse params
 
-print(output)
+# model.forward()
