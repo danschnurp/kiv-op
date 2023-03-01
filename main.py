@@ -20,22 +20,23 @@ data = read_parquet("SODD_dev.parquet.gzip")
 
 data = data.head(50)
 data = data[data.label == 0]
-print(data.index)
-print(data.get())
-exit(0)
+# print(data.iloc)
+# print()
+# exit(0)
 
 model, tokenizer = load_nett()
 
-for i in data.index:
-    first_post = data.first_post[i]
-    second_post = data.second_post[i]
+for index, i in enumerate(data.iloc):
+    first_post = i.first_post
+    second_post = i.second_post
 
     # Encoding the first post into a sequence of integers.
     encoding_first = tokenizer.encode(first_post, return_tensors="pt")
 
     # Encoding the second post into a sequence of integers.
     encoding_second = tokenizer.encode(second_post, return_tensors="pt")
-    print("index:", i)
+    if index == 4:
+        print()
     out = model.forward(encoding_first, encoding_second)
 
     print(out)
