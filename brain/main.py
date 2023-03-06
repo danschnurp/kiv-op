@@ -27,8 +27,7 @@ data = data[data.label == 0]
 # exit(0)
 
 model, tokenizer, position_ids = load_nett()
-# todo how to set max len
-max_len = int(len(torch.squeeze(position_ids)) / 2)
+max_len = int(len(torch.squeeze(position_ids)) / 2.)
 print("max_len", max_len)
 
 for index, i in enumerate(data.iloc):
