@@ -6,6 +6,4 @@
 
 - Create a web application that allows you to enter a question and accompanying source code. The application will search for the most similar question from the off-line Stack Overflow database for this input. Finally, it will allow automatic entry of the question into the Stack Overflow portal.
 
-- 
-- 
-![neco]("Screenshot 2023-03-13 at 22.46.46.png")
+![](Screenshot.png)
