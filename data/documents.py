@@ -5,8 +5,8 @@ from elasticsearch_dsl import Document, Date, Keyword, Text, Long, Boolean, Inte
 from elasticsearch_dsl.connections import connections
 from data.utils import sanitize_html_for_web
 
-ES_HOSTS = ["xxx"]
-ES_LOGIN = "xxx"
+ES_HOSTS = ["http://localhost:9200"]
+ES_LOGIN = None
 
 html_strip = analyzer("html_strip", tokenizer="standard", filter=["stop", "lowercase", "snowball"],
                       char_filter=["html_strip"])
