@@ -205,6 +205,13 @@ comment_count_icon::first-line {
   width: 100px;
 }
 
+.similarity_score {
+  float: left;
+  font-size: 17px;
+  padding-top: 4px;
+  padding-right: 20px;
+}
+
 .author_name {
   float: left;
   width: 150px;
