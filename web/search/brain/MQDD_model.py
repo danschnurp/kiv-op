@@ -25,7 +25,6 @@ class ClsHeadModelMQDD(torch.nn.Module):
         self._softmax = torch.nn.Softmax(dim=1)
 
     def forward(self, input_1, input_2):
-        #  todo index out ouf bounds in 4 index
         input_1_dense = self.bert_model(torch.squeeze(input_1, 1), None)
         input_2_dense = self.bert_model(torch.squeeze(input_2, 1), None)
 
@@ -33,4 +32,6 @@ class ClsHeadModelMQDD(torch.nn.Module):
         x = self._dropout1(concat)
         x = self._relu(self._dense(x))
         x = self._dropout2(x)
-        return self._out(x)
+        x = self._out(x)
+        x = x.detach().numpy()
+        return "DUPLICATE" if x[0][0] < x[0][1] else "different"

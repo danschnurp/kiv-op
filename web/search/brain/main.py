@@ -1,21 +1,5 @@
 import torch
 from pandas import read_parquet
-from transformers import AutoTokenizer
-
-from MQDD_model import ClsHeadModelMQDD
-
-
-def load_nett():
-    tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
-    model = ClsHeadModelMQDD("UWB-AIR/MQDD-duplicates")
-
-    # https://drive.google.com/drive/folders/1CYiqF2GJ2fSQzx_oM4-X_IhpObi4af5Q
-    ckpt = torch.load("model.pt", map_location="cpu")
-    position_ids = ckpt["model_state"]["bert_model.embeddings.position_ids"]
-    del ckpt["model_state"]["bert_model.embeddings.position_ids"]
-    model.load_state_dict(ckpt["model_state"])
-    return model, tokenizer, position_ids
-
 
 # https://drive.google.com/drive/folders/1JG6Fibvhs0Jz6JD83gwMqAmzUV9rsoX3
 # Reading the parquet file and storing it in a dataframe.

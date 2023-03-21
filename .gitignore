@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 
-brain/SODD_dev.parquet.gzip
-brain/model.pt
+SODD_dev.parquet.gzip
+model.pt

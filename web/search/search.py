@@ -1,4 +1,5 @@
 from data.documents import Post
+from web.search.models import tokenizer, model, max_len
 
 
 def __search_fulltext(search_text, post_start, post_end, request, date_filter):
@@ -15,7 +16,7 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter):
     posts_search = Post.search().filter("term", post_type=1).query("multi_match", query=search_text,
                                                                    fields=["title", "text"])[post_start:post_end]
     # determine filters
-    if request.GET.getlist("pages") and request.GET.get("pages", "all") != "all": # pages filter
+    if request.GET.getlist("pages") and request.GET.get("pages", "all") != "all":  # pages filter
         pages = request.GET.getlist("pages")
         posts_search = posts_search.filter("terms", page=pages)
 
@@ -26,7 +27,17 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter):
     posts_search = posts_search.filter("range", creation_date={"gte": date_filter["start"], "lt": date_filter["end"]})  # date filter always has at least a default value
 
     posts_response = posts_search.execute()
-    return Post.get_display_info_for_posts(posts_response.hits)
+    result_posts = Post.get_display_info_for_posts(posts_response.hits)
+    for post in result_posts:
+        # Encoding the first post into a sequence of integers.
+        encoding_first = tokenizer.encode(post["title"], max_length=max_len, truncation=True, return_tensors="pt")
+
+        # Encoding the second post into a sequence of integers.
+        encoding_second = tokenizer.encode(search_text, max_length=max_len, truncation=True, return_tensors="pt")
+        out = model.forward(encoding_first, encoding_second)
+        post["similarity"] = str(out)
+
+    return result_posts
 
 
 def __search_siamese(search_text, post_start, post_end):
