@@ -1,5 +1,5 @@
 from data.documents import Post
-from web.search.models import tokenizer, model, max_len
+from web.search.apps import SearchConfig
 
 
 def __search_fulltext(search_text, post_start, post_end, request, date_filter):
@@ -24,32 +24,36 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter):
         posts_search = posts_search.filter("exists", field="accepted_answer_ID")
 
     # date filter
-    posts_search = posts_search.filter("range", creation_date={"gte": date_filter["start"], "lt": date_filter["end"]})  # date filter always has at least a default value
+    posts_search = posts_search.filter("range", creation_date={"gte": date_filter["start"], "lt": date_filter["end"]})
+    # date filter always has at least a default value
 
     posts_response = posts_search.execute()
     result_posts = Post.get_display_info_for_posts(posts_response.hits)
+    return search_siamese(result_posts, search_text)
+
+
+def search_siamese(result_posts: dict, search_text: str) -> dict:
+    """
+    This function takes in a dictionary of posts and a search text, and returns a dictionary of posts that contain the
+    "similarity" tag
+    :param result_posts: This is the dictionary of posts that we got from the previous function
+    :type result_posts: dict
+    :param search_text: The text to search for
+    :type search_text: str
+    """
     for post in result_posts:
         # Encoding the first post into a sequence of integers.
-        encoding_first = tokenizer.encode(post["title"], max_length=max_len, truncation=True, return_tensors="pt")
-
+        encoding_first = SearchConfig.tokenizer.encode(post["title"], max_length=SearchConfig.max_len,
+                                                       truncation=True, return_tensors="pt")
         # Encoding the second post into a sequence of integers.
-        encoding_second = tokenizer.encode(search_text, max_length=max_len, truncation=True, return_tensors="pt")
-        out = model.forward(encoding_first, encoding_second)
+        encoding_second = SearchConfig.tokenizer.encode(search_text,
+                                                        max_length=SearchConfig.max_len,
+                                                        truncation=True, return_tensors="pt")
+        # Using the model to calculate the similarity between the two questions.
+        out = SearchConfig.model.forward(encoding_first, encoding_second)
         post["similarity"] = str(out)
 
     return result_posts
-
-
-def __search_siamese(search_text, post_start, post_end):
-    """
-    Siamese search is not implemented yet!!! Only placeholder function....
-
-    :param search_text:
-    :param post_start:
-    :param post_end:
-    :return:
-    """
-    return []
 
 
 def search(search_type, search_text, page, posts_per_page, request, date_filter):
@@ -70,5 +74,5 @@ def search(search_type, search_text, page, posts_per_page, request, date_filter)
     post_end = (page * posts_per_page) + 1
     if search_type == "fulltext":
         return __search_fulltext(search_text, post_start, post_end, request, date_filter)
-    else:
-        return __search_siamese(search_text, post_start, post_end)
+    # else:
+    #     return __search_siamese(search_text, post_start, post_end)
