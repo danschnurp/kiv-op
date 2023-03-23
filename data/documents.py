@@ -171,7 +171,7 @@ class Post(Document):
 
         :param post_id: ID of post for which usage is going to be found
         :param page: post's page
-        :return: True if post is already used in DS, False if post is not used or does not exists
+        :return: True if post is already used in DS, False if post is not used or does not exist
         """
         post_search = Post.search().filter("term", post_ID=post_id).filter("term", page=page)
         post_response = post_search.execute()
