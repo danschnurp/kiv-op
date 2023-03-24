@@ -4,6 +4,6 @@
 from data.index_config.faiss_indexer_config.cfg import input_folder
 from data.indexers.faiss_indexer import index_part
 
-comments = "comments"
+xml_file_name = "users"
 
-index_part(input_folder=input_folder, xml_file_name=comments, part="Text")
+index_part(input_folder=input_folder, xml_file_name=xml_file_name, part="DisplayName")

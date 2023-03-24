@@ -1,12 +1,26 @@
 #  date: 23. 3. 2023
 #  author: Daniel Schnurpfeil
 #
+import time
+
 import numpy as np
 from transformers import AutoTokenizer
 from faiss import write_index, IndexFlatL2
 from lxml.etree import XMLParser, parse
 
-from data.utils import sanitize_html_for_web
+from data.utils import sanitize_html_for_web, make_output_dir
+
+
+def index_part(input_folder: str, xml_file_name: str, part: str):
+    # Loading the data from the xml file.
+    input_data = load_xml_data(input_folder=input_folder,
+                               desired_filename="/" + xml_file_name + ".xml", xpath_query="//row/@" + part)
+    t1 = time.time()
+    # Indexing the part.
+    index_with_faiss_to_file(input_data=input_data,
+                             output_file_path=make_output_dir(output_dir=input_folder,
+                                                              output_filename=xml_file_name) + "/" + part + ".index")
+    print(part, "part processed in:", time.time() - t1, "sec")
 
 
 def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) -> list:
