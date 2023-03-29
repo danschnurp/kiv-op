@@ -51,7 +51,7 @@ def search_siamese(result_posts: dict, search_text: str) -> dict:
                                                         truncation=True, return_tensors="pt")
         # Using the model to calculate the similarity between the two questions.
         out = SearchConfig.model.forward(encoding_first, encoding_second)
-        post["similarity"] = str(out)
+        post["similarity"] = out
 
     return result_posts
 
