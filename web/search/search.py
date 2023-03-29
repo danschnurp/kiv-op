@@ -2,7 +2,7 @@ from data.documents import Post
 from web.search.apps import SearchConfig
 
 
-def __search_fulltext(search_text, post_start, post_end, request, date_filter):
+def __search_fulltext(search_text, post_start, post_end, request, date_filter, siamese_search=False):
     """
     Perform fulltext search in order to find posts that match with given search_text string
 
@@ -29,7 +29,10 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter):
 
     posts_response = posts_search.execute()
     result_posts = Post.get_display_info_for_posts(posts_response.hits)
-    return search_siamese(result_posts, search_text)
+    if siamese_search:
+        return search_siamese(result_posts, search_text)
+    else:
+        return result_posts
 
 
 def search_siamese(result_posts: dict, search_text: str) -> dict:
@@ -74,5 +77,5 @@ def search(search_type, search_text, page, posts_per_page, request, date_filter)
     post_end = (page * posts_per_page) + 1
     if search_type == "fulltext":
         return __search_fulltext(search_text, post_start, post_end, request, date_filter)
-    # else:
-    #     return __search_siamese(search_text, post_start, post_end)
+    else:
+        return __search_fulltext(search_text, post_start, post_end, request, date_filter, siamese_search=True)
