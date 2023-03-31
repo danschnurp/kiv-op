@@ -59,14 +59,19 @@ def index_with_faiss_to_file(input_data: list, output_file_path: str, max_length
         max_length=max_length,
         truncation=True, return_tensors="pt") for i in input_data]
 
-    #  todo "max_length" could be optimized to max value of "data" for saving memory on disk 🤔
-    indexer = IndexFlatL2(max_length)  # build the index
+    # Finding the maximum length of the data for saving memory on disk 🤔
+    max_indexed_length = 0
+    for i in data:
+        curr_len = len(np.squeeze(i.detach().numpy()))
+        if max_indexed_length < curr_len:
+            max_indexed_length = curr_len
     # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
-    data_matrix = np.zeros((len(data), max_length))
+    data_matrix = np.zeros((len(data), max_indexed_length))
     for index, i in enumerate(data):
         # Converting the tensor into a numpy array and then adding it to the matrix.
         j = np.squeeze(i.detach().numpy())
         data_matrix[index, :len(j)] = j
+    indexer = IndexFlatL2(max_indexed_length)  # build the index
     # Adding the matrix to the indexer.
     indexer.add(data_matrix)
     # Saving the indexed data to a file.
