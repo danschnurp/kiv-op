@@ -1,0 +1,15 @@
+GET posts/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET posts/_search
+{"query":{ "ids":{ "values": [ "72414-gamedev" ] } } }
+
+GET posts/_search
+{"query":{ "match": {
+  "post_ID": "61651" }
+}
+}
