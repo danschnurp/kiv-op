@@ -1,26 +1,22 @@
 import numpy as np
 from faiss import read_index
-from transformers import AutoTokenizer
-from data.utils import sanitize_html_for_web
+
+from experiments.question_encoder import encode_question
 
 index = read_index("/Users/danschnurpfeil/SERVER_APPS/gamedev.stackexchange.com/posts/Body.index")
 
 print(index.ntotal)
 print(index.d)
 
-max_length = 512
-tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
-
-encoded_question = tokenizer.encode(
-    # Removing the HTML tags from the text.
-    sanitize_html_for_web("Is there a common practice for resolving polygon/polygon collision by sliding as shown in the image"),
-    max_length=max_length,
-    truncation=True, return_tensors="pt")
-
 normalized_question = np.zeros((1, index.d))
-encoded_question = np.squeeze(encoded_question.detach().numpy())
+# id = 1
+encoded_question = encode_question(question="like to read up on path finding algorithms")
 normalized_question[0, :len(encoded_question)] = encoded_question
-
-D, I = index.search(normalized_question, 3)  # actual search
+print("encoded_question", encoded_question)
+print("normalized_question", normalized_question)
+D, I, R = index.search_and_reconstruct(normalized_question, 5)  # actual search
+print(index.id_map)
 print(I[:5])  # neighbors of the 5 first queries
+print(D[:5])
+
 
