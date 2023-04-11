@@ -40,7 +40,7 @@ def make_output_dir(output_filename: str, output_dir: str) -> str:
         if output_dir[-1] != "/":
             output_dir += "/"
         os.mkdir(output_dir + output_filename)
-    output_dir += output_filename
+    output_dir += "/" + output_filename
     return output_dir
 
 
