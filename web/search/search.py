@@ -1,3 +1,5 @@
+from itertools import permutations
+
 from data.documents import Post
 from web.search.apps import SearchConfig
 
@@ -56,6 +58,34 @@ def search_siamese(result_posts: dict, search_text: str) -> dict:
         out = SearchConfig.model.forward(encoding_first, encoding_second)
         post["similarity"] = out
 
+    encoded_posts = [
+        SearchConfig.tokenizer.encode(post["text"], max_length=SearchConfig.max_len,
+                                      truncation=True, return_tensors="pt") for post in result_posts]
+    # searching for related questions among the results
+    for index, i, post in zip(range(len(encoded_posts)), encoded_posts, result_posts):
+        for j, post2 in zip(encoded_posts, result_posts):
+            for k in range(index):
+                # searching if is topic already linked
+                if post["title"] in result_posts[k]["related_questions"]:
+                    if "related_questions" not in post:
+                        post["related_questions"] = [m for m in result_posts[k]["related_questions"] if
+                                                     m != post["title"]]
+                    else:
+                        post["related_questions"] += [m for m in result_posts[k]["related_questions"] if
+                                                      m != post["title"] and m not in post["related_questions"]]
+                    post["related_questions"].append(result_posts[k]["title"])
+                # skipping identical posts
+            if post["title"] != post2["title"]:
+                if "related_questions" in post:
+                    if post2["title"] in post["related_questions"]:
+                        continue
+                out = SearchConfig.model.forward(i, j)
+                if "DUPLICATE" == out:
+                    if "related_questions" in post:
+                        post["related_questions"].append(post2["title"])
+                    else:
+                        post["related_questions"] = [post2["title"]]
+    # todo visualize "related_questions" to user
     return result_posts
 
 
