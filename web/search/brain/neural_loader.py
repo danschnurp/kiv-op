@@ -13,6 +13,11 @@ def load_nett(model_location: str) -> tuple:
     """
     # Loading the pretrained model from HuggingFace.
     tokenizer = AutoTokenizer.from_pretrained("UWB-AIR/MQDD-duplicates")
+
+    # tokenizer eos_token -> sep , bos_token -> cls
+    tokenizer.bos_token = "cls"
+    tokenizer.eos_token = "sep"
+
     model = ClsHeadModelMQDD("UWB-AIR/MQDD-duplicates")
 
     # https://drive.google.com/drive/folders/1CYiqF2GJ2fSQzx_oM4-X_IhpObi4af5Q

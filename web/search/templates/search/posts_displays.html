@@ -10,9 +10,28 @@
                 <a class="comment_count_icon" href="{% url 'search:detail' post.page post.post_ID %}">0</a>
                 <p class="d-xl-flex justify-content-xl-start comment_count_nr">{{ post.comment_count }}</p>
             </span>
-            {% if post.similarity %}
-            <p class="similarity_score"><i class="fa fa-cat"></i> {{ post.similarity }} </p>
-            {% endif %}
+
+                    {% if post.related_question_ids %}
+
+                    <button class="btn btn-outline-danger  dropdown-toggle" type="button"
+                            id="collapse_{{ post.post_ID }}" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cat"></i> &nbsp; siamese posts
+          </button>
+
+  <div class="dropdown-menu" aria-labelledby="collapse_{{ post.post_ID }}">
+
+                  {% for related_id, related_title in post.related_questions %}
+ <a class="dropdown-item" href="{% url 'search:detail' post.page related_id %}">
+                        {{ related_title }}
+                  </a>
+                  {% endfor %}
+              </ul>
+
+        </div>
+
+        {% endif %}
+
             <p class="author_name"><i class="fa fa-user"></i>{{ post.author_name }}</p>
             <p class="post_page"><i class="fas fa-book-open"></i> {{ post.page }}</p>
             <p class="post_accepted_answer">Accepted answer:&nbsp;<i class="far {% if post.accepted_answer_ID %} fa-check-circle {% else %} fa-times-circle {% endif %}"></i></p>

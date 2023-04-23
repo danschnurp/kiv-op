@@ -1,7 +1,9 @@
+import time
 from itertools import permutations
 
 from data.documents import Post
 from web.search.apps import SearchConfig
+from web.search.brain.question_encoder import encode_question
 
 
 def __search_fulltext(search_text, post_start, post_end, request, date_filter, siamese_search=False):
@@ -32,12 +34,12 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
     posts_response = posts_search.execute()
     result_posts = Post.get_display_info_for_posts(posts_response.hits)
     if siamese_search:
-        return search_siamese(result_posts, search_text)
+        return search_siamese(result_posts)
     else:
         return result_posts
 
 
-def search_siamese(result_posts: dict, search_text: str) -> dict:
+def search_siamese(result_posts: dict) -> dict:
     """
     This function takes in a dictionary of posts and a search text, and returns a dictionary of posts that contain the
     "similarity" tag
@@ -46,46 +48,42 @@ def search_siamese(result_posts: dict, search_text: str) -> dict:
     :param search_text: The text to search for
     :type search_text: str
     """
-    for post in result_posts:
-        # Encoding the first post into a sequence of integers.
-        encoding_first = SearchConfig.tokenizer.encode(post["title"], max_length=SearchConfig.max_len,
-                                                       truncation=True, return_tensors="pt")
-        # Encoding the second post into a sequence of integers.
-        encoding_second = SearchConfig.tokenizer.encode(search_text,
-                                                        max_length=SearchConfig.max_len,
-                                                        truncation=True, return_tensors="pt")
-        # Using the model to calculate the similarity between the two questions.
-        out = SearchConfig.model.forward(encoding_first, encoding_second)
-        post["similarity"] = out
-
     encoded_posts = [
-        SearchConfig.tokenizer.encode(post["text"], max_length=SearchConfig.max_len,
-                                      truncation=True, return_tensors="pt") for post in result_posts]
-    # searching for related questions among the results
-    for index, i, post in zip(range(len(encoded_posts)), encoded_posts, result_posts):
+        encode_question(post["text"], SearchConfig.tokenizer) for post in result_posts]
+    t1 = time.time()
+    # searching for related questions among the results (first 3...)
+    for index, i, post in zip(range(len(encoded_posts)), encoded_posts[:3], result_posts[:3]):
         for j, post2 in zip(encoded_posts, result_posts):
             for k in range(index):
                 # searching if is topic already linked
-                if post["title"] in result_posts[k]["related_questions"]:
-                    if "related_questions" not in post:
-                        post["related_questions"] = [m for m in result_posts[k]["related_questions"] if
-                                                     m != post["title"]]
-                    else:
-                        post["related_questions"] += [m for m in result_posts[k]["related_questions"] if
-                                                      m != post["title"] and m not in post["related_questions"]]
-                    post["related_questions"].append(result_posts[k]["title"])
+                if post["post_ID"] in result_posts[k]["related_question_ids"]:
+                    if "related_question_ids" not in post and "related_question_titles" not in post:
+                        post["related_question_ids"] = [m for m in result_posts[k]["related_question_ids"] if
+                                                        m != post["post_ID"]]
+                        post["related_question_ids"].append(result_posts[k]["post_ID"])
+
+                        post["related_question_titles"] = [m for m in result_posts[k]["related_question_titles"] if
+                                                           m != post["title"]]
+                        post["related_question_titles"].append(result_posts[k]["title"])
+
                 # skipping identical posts
-            if post["title"] != post2["title"]:
-                if "related_questions" in post:
-                    if post2["title"] in post["related_questions"]:
+            if post["post_ID"] != post2["post_ID"]:
+                if "related_question_ids" in post:
+                    if post2["post_ID"] in post["related_question_ids"]:
                         continue
-                out = SearchConfig.model.forward(i, j)
+                input_data = dict(i.data, **j.data)
+                out = SearchConfig.model.forward(input_data)
                 if "DUPLICATE" == out:
-                    if "related_questions" in post:
-                        post["related_questions"].append(post2["title"])
+                    if "related_question_ids" in post and "related_question_titles" in post:
+                        post["related_question_ids"].append(post2["post_ID"])
+                        post["related_question_titles"].append(post2["title"])
                     else:
-                        post["related_questions"] = [post2["title"]]
-    # todo visualize "related_questions" to user
+                        post["related_question_ids"] = [post2["post_ID"]]
+                        post["related_question_titles"] = [post2["title"]]
+        # zip for better parsing to template
+        post["related_questions"] = zip(post["related_question_ids"], post["related_question_titles"])
+    print(time.time() - t1)
+
     return result_posts
 
 
