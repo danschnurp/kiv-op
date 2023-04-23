@@ -8,7 +8,7 @@ import numpy as np
 from faiss import write_index, IndexFlatL2, IndexIDMap2
 from lxml.etree import XMLParser, parse
 
-from data.utils import make_output_dir
+from data.utils import make_output_dir, sanitize_html_for_web
 from experiments.question_encoder import encode_question, prepare_tok_model
 
 
@@ -56,27 +56,31 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     :type input_data: list
     """
     # Converting the text into a sequence of numbers.
-    data = []
-
-    toolbar_width = 100
+    # data = []
+    #
+    # toolbar_width = 100
 
     tokenizer, model = prepare_tok_model()
 
-    sys.stdout.write("[%s]" % (" " * toolbar_width))
-    sys.stdout.flush()
-    sys.stdout.write("\b" * (toolbar_width + 1))
+    t1 = time.time()
+    data = [sanitize_html_for_web(i.replace("\n", "")) for i in input_data]
+    data = encode_question(data, tokenizer, model)
+    print("sanitized and encoded in:", time.time() - t1, "sec")
 
-    # encode_question(input_data, tokenizer, model)
+    # sys.stdout.write("[%s]" % (" " * toolbar_width))
+    # sys.stdout.flush()
+    # sys.stdout.write("\b" * (toolbar_width + 1))
 
-    for index, i in enumerate(input_data):
-        if index % int((len(input_data) / toolbar_width)) == 0:
-            sys.stdout.write("-")
-            sys.stdout.flush()
-        data.append(encode_question(
-            # Removing the HTML tags from the text.
-            i, tokenizer, model))
-    sys.stdout.write("]")
-    sys.stdout.flush()
+    # for index, i in enumerate(input_data):
+    #     if index % int((len(input_data) / toolbar_width)) == 0:
+    #         sys.stdout.write("-")
+    #         sys.stdout.flush()
+    #     data.append(encode_question(
+    #         # Removing the HTML tags from the text.
+    #         i, tokenizer, model))
+    # sys.stdout.write("]")
+    # sys.stdout.flush()
+
     # Finding the maximum length of the data for saving memory on disk 🤔
     max_indexed_length = 0
     for i in data:
