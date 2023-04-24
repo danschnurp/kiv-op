@@ -19,9 +19,6 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
     """
     posts_search = Post.search().filter("term", post_type=1).query("multi_match", query=search_text,
                                                                    fields=["title", "text"])[post_start:post_end]
-    # post_links = PostLink.search().filter("term", post_type=1).query(
-    # #     todo
-    # )[post_start:post_end]
 
     # determine filters
     if request.GET.getlist("pages") and request.GET.get("pages", "all") != "all":  # pages filter
@@ -37,6 +34,15 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
 
     posts_response = posts_search.execute()
     result_posts = Post.get_display_info_for_posts(posts_response.hits)
+    # todo edit the query to elastic
+    # post_links_search = [PostLink.search().filter("term", post_type=1).query(
+    #     "multi_match", query=i["post_ID"],
+    #     fields=["post_ID"]
+    # ) for i in result_posts]
+    #
+    # links_response = [i.execute() for i in post_links_search]
+    # result_links = [PostLink.get_display_info_for_links(i.hits) for i in links_response]
+
     if siamese_search:
         return search_siamese(result_posts)
     else:

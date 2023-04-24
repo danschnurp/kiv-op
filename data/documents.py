@@ -196,6 +196,21 @@ class PostLink(Document):
     class Index:
         name = "links"
 
+    @staticmethod
+    def get_display_info_for_links(links):
+        links_info = {}
+        for link in links:
+            info = PostLink.get_display_info_for_link(link)
+            if info["post_ID"] not in links_info.keys():
+                links_info[info["post_ID"]] = [info["related_question_id"]]
+            else:
+                links_info[info["post_ID"]].append(info["related_question_id"])
+        return links_info
+
+    @staticmethod
+    def get_display_info_for_link(link):
+        return {"post_ID": link.post_ID, "related_question_id": link.related_post_ID}
+
 
 class User(Document):
     """
