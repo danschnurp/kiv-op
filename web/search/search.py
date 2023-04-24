@@ -34,14 +34,23 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
 
     posts_response = posts_search.execute()
     result_posts = Post.get_display_info_for_posts(posts_response.hits)
-    # todo edit the query to elastic
-    # post_links_search = [PostLink.search().filter("term", post_type=1).query(
-    #     "multi_match", query=i["post_ID"],
-    #     fields=["post_ID"]
-    # ) for i in result_posts]
-    #
-    # links_response = [i.execute() for i in post_links_search]
-    # result_links = [PostLink.get_display_info_for_links(i.hits) for i in links_response]
+
+    post_links_search = [PostLink.search().query(
+        "match", post_ID=i["post_ID"],
+
+    ) for i in result_posts]
+
+    links_response = [i.execute() for i in post_links_search]
+    result_links = [PostLink.get_display_info_for_links(i.hits) for i in links_response]
+
+    for i in result_links:
+        if i:
+            for j in result_posts:
+                if j["post_ID"] == i[0]:
+                    if "linked_posts" not in j:
+                        j["linked_posts"] = i[1]
+                    else:
+                        j["linked_posts"].append(i[1])
 
     if siamese_search:
         return search_siamese(result_posts)
