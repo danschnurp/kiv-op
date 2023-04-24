@@ -1,7 +1,7 @@
 import time
 from itertools import permutations
 
-from data.documents import Post
+from data.documents import Post, PostLink
 from web.search.apps import SearchConfig
 from web.search.brain.question_encoder import encode_question
 
@@ -19,6 +19,10 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
     """
     posts_search = Post.search().filter("term", post_type=1).query("multi_match", query=search_text,
                                                                    fields=["title", "text"])[post_start:post_end]
+    # post_links = PostLink.search().filter("term", post_type=1).query(
+    # #     todo
+    # )[post_start:post_end]
+
     # determine filters
     if request.GET.getlist("pages") and request.GET.get("pages", "all") != "all":  # pages filter
         pages = request.GET.getlist("pages")
@@ -51,37 +55,30 @@ def search_siamese(result_posts: dict) -> dict:
     encoded_posts = [
         encode_question(post["text"], SearchConfig.tokenizer) for post in result_posts]
     t1 = time.time()
-    # searching for related questions among the results (first 3...)
-    for index, i, post in zip(range(len(encoded_posts)), encoded_posts[:3], result_posts[:3]):
-        for j, post2 in zip(encoded_posts, result_posts):
-            for k in range(index):
-                # searching if is topic already linked
-                if post["post_ID"] in result_posts[k]["related_question_ids"]:
-                    if "related_question_ids" not in post and "related_question_titles" not in post:
-                        post["related_question_ids"] = [m for m in result_posts[k]["related_question_ids"] if
-                                                        m != post["post_ID"]]
-                        post["related_question_ids"].append(result_posts[k]["post_ID"])
+    combinations = {}
+    # creates variation pairs for (first 3 and all) because it is still slow
+    for index, i in enumerate(encoded_posts[:3]):
+        for jndex, j in enumerate(encoded_posts):
+            if i != j:
+                combinations[str(index) + "_" + str(jndex)] = [i, j]
+    # searching for related questions among the results
+    result_combinations = [SearchConfig.model.forward(dict(out[0].data, **out[1].data))
+                           for out in combinations.values()]
+    # assign duplicate occurrences
+    for combination, result in zip(combinations.keys(), result_combinations):
+        if "DUPLICATE" == result:
+            post = result_posts[int(combination.split("_")[0])]
+            if "related_question_ids" in post and "related_question_titles" in post:
+                post["related_question_ids"].append(result_posts[int(combination.split("_")[1])]["post_ID"])
+                post["related_question_titles"].append(result_posts[int(combination.split("_")[1])]["title"])
+            else:
+                post["related_question_ids"] = [result_posts[int(combination.split("_")[1])]["post_ID"]]
+                post["related_question_titles"] = [result_posts[int(combination.split("_")[1])]["title"]]
 
-                        post["related_question_titles"] = [m for m in result_posts[k]["related_question_titles"] if
-                                                           m != post["title"]]
-                        post["related_question_titles"].append(result_posts[k]["title"])
-
-                # skipping identical posts
-            if post["post_ID"] != post2["post_ID"]:
-                if "related_question_ids" in post:
-                    if post2["post_ID"] in post["related_question_ids"]:
-                        continue
-                input_data = dict(i.data, **j.data)
-                out = SearchConfig.model.forward(input_data)
-                if "DUPLICATE" == out:
-                    if "related_question_ids" in post and "related_question_titles" in post:
-                        post["related_question_ids"].append(post2["post_ID"])
-                        post["related_question_titles"].append(post2["title"])
-                    else:
-                        post["related_question_ids"] = [post2["post_ID"]]
-                        post["related_question_titles"] = [post2["title"]]
-        # zip for better parsing to template
-        post["related_questions"] = zip(post["related_question_ids"], post["related_question_titles"])
+    # zip for better structure parsing to template
+    for post in result_posts:
+        if "related_question_ids" in post and "related_question_titles" in post:
+            post["related_questions"] = zip(post["related_question_ids"], post["related_question_titles"])
     print(time.time() - t1)
 
     return result_posts
