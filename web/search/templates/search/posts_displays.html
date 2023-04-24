@@ -31,7 +31,6 @@
 
         {% endif %}
 
-            {% if post.related_question_ids %}
                         {% if post.linked_posts %}
 
              <button class="btn btn-outline-secondary  dropdown-toggle" type="button"
@@ -40,7 +39,7 @@
             <i class="fa fa-cat"></i> &nbsp; siamese post IDS
           </button>
 
-  <div class="dropdown-menu" aria-labelledby="collapse2_{{ post.post_ID }}">
+  <div class="dropdown-menu" aria-labelledby="collapse2'{{ post.post_ID }}'s">
 
 
       <span class="dropdown-item">    {{ post.linked_posts }}</span>
@@ -53,7 +52,7 @@
         </div>
 {% endfor %}
             {% endif %}
-                   {% endif %}
+
 
             <p class="author_name"><i class="fa fa-user"></i>{{ post.author_name }}</p>
             <p class="post_page"><i class="fas fa-book-open"></i> {{ post.page }}</p>
