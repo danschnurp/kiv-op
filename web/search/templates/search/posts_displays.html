@@ -34,23 +34,23 @@
                         {% if post.linked_posts %}
 
              <button class="btn btn-outline-secondary  dropdown-toggle" type="button"
-                            id="collapse2'{{ post.post_ID }}'s" data-toggle="dropdown"
+                            id="collapse2" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
             <i class="fa fa-cat"></i> &nbsp; siamese post IDS
           </button>
 
-  <div class="dropdown-menu" aria-labelledby="collapse2'{{ post.post_ID }}'s">
+  <div class="dropdown-menu" aria-labelledby="collapse2">
 
 
       <span class="dropdown-item">    {{ post.linked_posts }}</span>
-<!--      todo separate them-->
+<span class="dropdown-item">   --------</span>
 
        {% for related_idss in post.related_question_ids %}
 
       <span class="dropdown-item">{{ related_idss }}</span>
-
-        </div>
 {% endfor %}
+        </div>
+
             {% endif %}
 
 
