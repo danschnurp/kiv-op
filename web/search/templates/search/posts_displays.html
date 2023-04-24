@@ -26,11 +26,34 @@
                         {{ related_title }}
                   </a>
                   {% endfor %}
-              </ul>
 
         </div>
 
         {% endif %}
+
+            {% if post.related_question_ids %}
+                        {% if post.linked_posts %}
+
+             <button class="btn btn-outline-secondary  dropdown-toggle" type="button"
+                            id="collapse2'{{ post.post_ID }}'s" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cat"></i> &nbsp; siamese post IDS
+          </button>
+
+  <div class="dropdown-menu" aria-labelledby="collapse2_{{ post.post_ID }}">
+
+
+      <span class="dropdown-item">    {{ post.linked_posts }}</span>
+<!--      todo separate them-->
+
+       {% for related_idss in post.related_question_ids %}
+
+      <span class="dropdown-item">{{ related_idss }}</span>
+
+        </div>
+{% endfor %}
+            {% endif %}
+                   {% endif %}
 
             <p class="author_name"><i class="fa fa-user"></i>{{ post.author_name }}</p>
             <p class="post_page"><i class="fas fa-book-open"></i> {{ post.page }}</p>

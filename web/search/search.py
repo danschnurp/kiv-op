@@ -45,12 +45,12 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
 
     for i in result_links:
         if i:
-            for j in result_posts:
-                if j["post_ID"] == i[0]:
-                    if "linked_posts" not in j:
-                        j["linked_posts"] = i[1]
+            for j in range(len(result_posts)):
+                if result_posts[j]["post_ID"] == i[0][0]:
+                    if "linked_posts" not in result_posts[j]:
+                        result_posts[j]["linked_posts"] = i[0][1]
                     else:
-                        j["linked_posts"].append(i[1])
+                        result_posts[j]["linked_posts"].append(i[0][1])
 
     if siamese_search:
         return search_siamese(result_posts)
