@@ -26,10 +26,18 @@ class ClsHeadModelMQDD(torch.nn.Module):
 
     def forward(self, x):
         input_1, input_1_mask, input_1_tok_types, input_2, input_2_mask, input_2_tok_types = x.values()
-        # input_1, input_1_mask, input_1_tok_types = torch.squeeze(input_1), torch.squeeze(input_1_mask), torch.squeeze(
-        #     input_1_tok_types)
-        # input_2, input_2_mask, input_2_tok_types = torch.squeeze(input_2), torch.squeeze(input_2_mask), torch.squeeze(
-        #     input_2_tok_types)
+        input_1, input_1_mask, input_1_tok_types = torch.squeeze(input_1), torch.squeeze(input_1_mask), torch.squeeze(
+            input_1_tok_types)
+        input_2, input_2_mask, input_2_tok_types = torch.squeeze(input_2), torch.squeeze(input_2_mask), torch.squeeze(
+            input_2_tok_types)
+
+        input_1, input_1_mask, input_1_tok_types = torch.reshape(input_1, (1, input_1.shape[0])), \
+                                                   torch.reshape(input_1_mask, (1, input_1_mask.shape[0])), \
+                                                   torch.reshape(input_1_tok_types, (1, input_1_tok_types.shape[0]))
+        input_2, input_2_mask, input_2_tok_types = torch.reshape(input_2, (1, input_2.shape[0])), \
+                                                   torch.reshape(input_2_mask, (1, input_2_mask.shape[0])), \
+                                                   torch.reshape(input_2_tok_types, (1, input_2_tok_types.shape[0]))
+
         input_1_dense = self.bert_model(input_1, input_1_mask, None, token_type_ids=input_1_tok_types)[1]
         input_2_dense = self.bert_model(input_2, input_2_mask, None, token_type_ids=input_2_tok_types)[1]
 

@@ -22,36 +22,47 @@
   <div class="dropdown-menu" aria-labelledby="collapse_{{ post.post_ID }}">
 
                   {% for related_id, related_title in post.related_questions %}
- <a class="dropdown-item" href="{% url 'search:detail' post.page related_id %}">
-                        {{ related_title }}
+ <a class="dropdown-item" href="{% url 'search:detail' post.page related_id %}"><i class="fa fa-cat" aria-hidden="true"></i>
+                 &nbsp;
+                     {% if post.linked_posts %}
+     {% if post.linked_posts == related_id %}
+            <i class="fa fa-check" aria-hidden="true"></i>
+       {% endif %}
+
+     {% endif %}
+      {{ related_title }}
                   </a>
                   {% endfor %}
 
+
+        {% if post.linked_posts %}
+              <div class="dropdown-divider"></div>
+       <a class="dropdown-item" href="{% url 'search:detail' post.page post.linked_posts %}">
+           <i class="fa fa-user" aria-hidden="true"></i>&nbsp;   {{ post.linked_posts_titles }} </a>
+
+                  {% endif %}
+
         </div>
+            {% else %}
+
+                               {% if post.linked_posts %}
+
+                                <button class="btn btn-outline-secondary  dropdown-toggle" type="button"
+                            id="collapse2_{{ post.post_ID }}" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cat"></i> &nbsp; siamese posts
+          </button>
+              <div class="dropdown-menu" aria-labelledby="collapse2_{{ post.post_ID }}">
+
+       <a class="dropdown-item" href="{% url 'search:detail' post.page post.linked_posts %}">
+           <i class="fa fa-user" aria-hidden="true"></i>&nbsp;   {{ post.linked_posts_titles }} </a>
+              </div>
+                  {% endif %}
 
         {% endif %}
 
-                        {% if post.linked_posts %}
 
-             <button class="btn btn-outline-secondary  dropdown-toggle" type="button"
-                            id="collapse2" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-            <i class="fa fa-cat"></i> &nbsp; siamese post IDS
-          </button>
 
-  <div class="dropdown-menu" aria-labelledby="collapse2">
-
-<!--    todo view ids correctly-->
-      <a class="dropdown-item">    {{ post.linked_posts }}</a>
-<a class="dropdown-item">   --------</a>
-
-       {% for related_idss in post.related_question_ids %}
-
-      <a class="dropdown-item">{{ related_idss }}</a>
-{% endfor %}
-        </div>
-
-            {% endif %}
 
 
             <p class="author_name"><i class="fa fa-user"></i>{{ post.author_name }}</p>

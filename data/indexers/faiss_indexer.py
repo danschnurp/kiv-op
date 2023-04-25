@@ -1,7 +1,6 @@
 #  date: 23. 3. 2023
 #  author: Daniel Schnurpfeil
 #
-import sys
 import time
 
 import numpy as np
@@ -9,7 +8,7 @@ from faiss import write_index, IndexFlatL2, IndexIDMap2
 from lxml.etree import XMLParser, parse
 
 from data.utils import make_output_dir, sanitize_html_for_web
-from experiments.question_encoder import encode_question, prepare_tok_model
+from experiments.question_encoder import encode_questions, prepare_tok_model
 
 
 def index_part(input_folder: str, xml_file_name: str, part: str):
@@ -63,8 +62,8 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     tokenizer, model = prepare_tok_model()
 
     t1 = time.time()
-    data = [sanitize_html_for_web(i.replace("\n", "")) for i in input_data]
-    data = encode_question(data, tokenizer, model)
+    data = [sanitize_html_for_web(i.replace("\n", ""),  display_code=False) for i in input_data]
+    data = encode_questions(data, tokenizer, model)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
     # sys.stdout.write("[%s]" % (" " * toolbar_width))

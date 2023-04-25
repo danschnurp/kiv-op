@@ -41,7 +41,7 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
     ) for i in result_posts]
 
     links_response = [i.execute() for i in post_links_search]
-    result_links = [PostLink.get_display_info_for_links(i.hits) for i in links_response]
+    result_links = [PostLink.get_display_info_for_links(i.hits, result_posts[0]["page"]) for i in links_response]
 
     for i in result_links:
         if i:
@@ -49,8 +49,10 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
                 if result_posts[j]["post_ID"] == i[0][0]:
                     if "linked_posts" not in result_posts[j]:
                         result_posts[j]["linked_posts"] = i[0][1]
+                        result_posts[j]["linked_posts_titles"] = i[0][2]
                     else:
                         result_posts[j]["linked_posts"].append(i[0][1])
+                        result_posts[j]["linked_posts_titles"].append(i[0][2])
 
     if siamese_search:
         return search_siamese(result_posts)
