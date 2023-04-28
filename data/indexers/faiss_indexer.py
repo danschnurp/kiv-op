@@ -23,7 +23,10 @@ def index_part(input_folder: str, xml_file_name: str, part: str):
     # Indexing the part.
     index_with_faiss_to_file(input_data=input_data, ids=ids,
                              output_file_path=make_output_dir(output_dir=input_folder,
-                                                              output_filename=xml_file_name[:-4]) + "/" + part + ".index")
+                                                              output_filename=xml_file_name[
+                                                                              :-4]) + "/" + part + ".index"
+                             # , stop_at=len(input_data)
+                             )
     print(part, "part processed in:", time.time() - t1, "sec")
 
 
@@ -45,25 +48,29 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
     return data
 
 
-def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
-                             ):
+def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, stop_at=50):
     """
-    Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
-    :param ids:
-    :param output_file_path: output file path
-    :param input_data: list of strings to be indexed
+      Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
+
+    :param input_data: A list of strings from xml file
     :type input_data: list
+    :param ids: A list of unique identifiers for each item in the input_data list. These identifiers will be used to
+    retrieve the corresponding item from the index later on
+    :type ids: list
+    :param output_file_path: The output file path is a string that specifies the location and name of the file where the
+    indexed data will be saved
+    :param stop_at: `stop_at` is an optional parameter that specifies the maximum number of search results to return. If not
+    specified, it defaults to 50, defaults to 50 (optional)
     """
 
-    part = 50
-    input_data = input_data[:part]
-    ids = ids[:part]
+    input_data = input_data[:stop_at]
+    ids = ids[:stop_at]
 
     tokenizer, model, tokenized_question_example = prepare_tok_model()
 
     t1 = time.time()
-    data = [sanitize_html_for_web(i.replace("\n", ""),  display_code=False) for i in input_data]
-    data = encode_questions(data, tokenizer, model, tokenized_question_example, batch_size=1)
+    data = [sanitize_html_for_web(i.replace("\n", ""), display_code=False) for i in input_data]
+    data = encode_questions(data, tokenizer, model, tokenized_question_example, batch_size=5)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
     # Finding the maximum length of the data for saving memory on disk 🤔
