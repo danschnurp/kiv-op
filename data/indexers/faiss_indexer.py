@@ -54,31 +54,17 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     :param input_data: list of strings to be indexed
     :type input_data: list
     """
-    # Converting the text into a sequence of numbers.
-    # data = []
-    #
-    # toolbar_width = 100
 
-    tokenizer, model = prepare_tok_model()
+    part = 50
+    input_data = input_data[:part]
+    ids = ids[:part]
+
+    tokenizer, model, tokenized_question_example = prepare_tok_model()
 
     t1 = time.time()
     data = [sanitize_html_for_web(i.replace("\n", ""),  display_code=False) for i in input_data]
-    data = encode_questions(data, tokenizer, model)
+    data = encode_questions(data, tokenizer, model, tokenized_question_example, batch_size=1)
     print("sanitized and encoded in:", time.time() - t1, "sec")
-
-    # sys.stdout.write("[%s]" % (" " * toolbar_width))
-    # sys.stdout.flush()
-    # sys.stdout.write("\b" * (toolbar_width + 1))
-
-    # for index, i in enumerate(input_data):
-    #     if index % int((len(input_data) / toolbar_width)) == 0:
-    #         sys.stdout.write("-")
-    #         sys.stdout.flush()
-    #     data.append(encode_question(
-    #         # Removing the HTML tags from the text.
-    #         i, tokenizer, model))
-    # sys.stdout.write("]")
-    # sys.stdout.flush()
 
     # Finding the maximum length of the data for saving memory on disk 🤔
     max_indexed_length = 0

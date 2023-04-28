@@ -9,7 +9,7 @@ print(index.ntotal)
 print(index.d)
 
 normalized_question = np.zeros((1, index.d))
-tokenizer, model = prepare_tok_model()
+tokenizer, model, _ = prepare_tok_model()
 # id = 1
 encoded_question = encode_question(question="like to read up on path finding algorithms. Is there a primer available "
                                             "or any material or tutorials on the Internet that would be a good start "

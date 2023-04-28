@@ -154,6 +154,7 @@ def explore_questions(request):
 
 
 def detail(request, post_id, page):
+    # todo here compute similarity wit faiss
     """
     Post detail view controller
 
