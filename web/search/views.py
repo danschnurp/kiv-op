@@ -191,9 +191,7 @@ def detail(request, post_id, page):
     siamese_posts = search_siamese_faissly(post_id)
     siamese_post_results = [Post.get_post(i, page) for i in siamese_posts]
     # gets linked posts by users
-    user_linked_posts = get_post_links_from_users([post_id], page)
-    # todo edit user_linked_posts
-
+    user_linked_posts = get_post_links_from_users(post_id, page)
     # render the template
     return render(request, 'search/question_details.html', context={"display_search": True,
                                                                     "post": post,

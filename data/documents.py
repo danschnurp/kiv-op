@@ -207,7 +207,7 @@ class PostLink(Document):
         links_info = []
         for link in links:
             info = PostLink.get_display_info_for_link(link, page)
-            links_info.append([info["post_ID"], info["related_question_id"], info["related_question_title"]])
+            links_info.append(info)
         if not links_info:
             return []
         return links_info
@@ -222,7 +222,7 @@ class PostLink(Document):
         """
         post = Post.get_post(link.related_post_ID, page)
         return {"post_ID": link.post_ID,
-                "related_question_id": link.related_post_ID,
+                "related_question_id": link.related_post_ID, "page": page,
                 "related_question_title": post.title}
 
 

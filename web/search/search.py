@@ -44,16 +44,17 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
     links_response = [i.execute() for i in post_links_search]
     result_links = [PostLink.get_display_info_for_links(i.hits, result_posts[0]["page"]) for i in links_response]
 
-    for i in result_links:
-        if i:
-            for j in range(len(result_posts)):
-                if result_posts[j]["post_ID"] == i[0][0]:
-                    if "linked_posts" not in result_posts[j]:
-                        result_posts[j]["linked_posts"] = i[0][1]
-                        result_posts[j]["linked_posts_titles"] = i[0][2]
-                    else:
-                        result_posts[j]["linked_posts"].append(i[0][1])
-                        result_posts[j]["linked_posts_titles"].append(i[0][2])
+    for k in result_links:
+        if k:
+            for i in k:
+                for j in range(len(result_posts)):
+                    if result_posts[j]["post_ID"] == i["post_ID"]:
+                        if "linked_posts" not in result_posts[j]:
+                            result_posts[j]["linked_posts"] = [i['related_question_id']]
+                            result_posts[j]["linked_posts_titles"] = [i['related_question_title']]
+                        else:
+                            result_posts[j]["linked_posts"].append(i['related_question_id'])
+                            result_posts[j]["linked_posts_titles"].append(i['related_question_title'])
 
     if siamese_search:
         return __search_siamese(result_posts)
@@ -114,14 +115,13 @@ def search_siamese_faissly(post_id, max_results=5):
 
     _, result_ids, _ = SearchConfig.indexed_post_bodies.search_and_reconstruct(normalized_post, max_results)
     result_ids = np.squeeze(result_ids)
-    return result_ids
+    return result_ids[result_ids != post_id]
     
 
-def get_post_links_from_users(result_posts, page):
-    post_links_search = [PostLink.search().query("match", post_ID=i) for i in result_posts]
-    links_response = [i.execute() for i in post_links_search]
-    
-    return [PostLink.get_display_info_for_links(i.hits, page) for i in links_response]
+def get_post_links_from_users(result_post, page):
+    post_links_search = PostLink.search().query("match", post_ID=result_post)
+    links_response = post_links_search.execute()
+    return PostLink.get_display_info_for_links(links_response.hits, page) if len(links_response.hits) > 0 else None
 
 
 def search(search_type, search_text, page, posts_per_page, request, date_filter):

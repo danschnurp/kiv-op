@@ -11,7 +11,7 @@ from data.utils import make_output_dir, sanitize_html_for_web
 from data.indexers.question_encoder import encode_questions, prepare_tok_model
 
 
-def index_part(input_folder: str, xml_file_name: str, part: str):
+def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, stop_at=None, output_dir_path=None):
     # Loading the data from the xml file.
     input_data = load_xml_data(input_folder=input_folder,
                                desired_filename="/" + xml_file_name, xpath_query="//row/@" + part)
@@ -19,15 +19,19 @@ def index_part(input_folder: str, xml_file_name: str, part: str):
                         desired_filename="/" + xml_file_name, xpath_query="//row/@" + "Id")
     print(xml_file_name, part, "loaded...")
     t1 = time.time()
-    input_folder = make_output_dir("faiss_indexed_data.py", input_folder)
+    if not output_dir_path:
+        output_dir_path = input_folder
+    output_dir_path = make_output_dir("faiss_indexed_data", output_dir_path)
+    if stop_at == -1:
+        stop_at = len(input_data)
     # Indexing the part.
     index_with_faiss_to_file(input_data=input_data,
                              ids=ids,
-                             output_file_path=make_output_dir(output_dir=input_folder,
+                             output_file_path=make_output_dir(output_dir=output_dir_path,
                                                               output_filename=xml_file_name[
                                                                               :-4]) + "/" + part + ".index",
-                             stop_at=50,  # todo for meta center set -> len(input_data)
-                             batch_size=4
+                             stop_at=stop_at,
+                             batch_size=batch_size
                              )
     print(part, "part processed in:", time.time() - t1, "sec")
 
@@ -50,7 +54,7 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
     return data
 
 
-def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int, stop_at=50):
+def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int, stop_at: int):
     """
        Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
 

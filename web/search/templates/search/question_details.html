@@ -25,36 +25,53 @@
             </div>
                                 {% if siamese_post_results %}
    <hr>
- <h6><i class="fas fa-cat" style="margin-right: 10px;"></i>Siamese posts:</h6>
-            <div class="card" id="siamese_post_results">
-                <div class="card-body">
+    <h6>
+      <i class="fas fa-cat" style="margin-right: 10px;"></i>Siamese posts:
+    </h6>
+    <div class="card" id="siamese_post_results">
+      <div class="card-body">
         <ul>
-                  {% for related in siamese_post_results %}
-            <li>
- <a href="{% url 'search:detail' related.page related.post_ID %}">
-                 &nbsp;
-                     {% if user_linked_posts %}
-     {% if user_linked_posts == related.post_ID %}
-            <i class="fa fa-check" style="margin-right: 10px;"></i>
-       {% endif %}
+          {% for related in siamese_post_results %}
+          <li>
+            <a href="{% url 'search:detail' related.page related.post_ID %}">
+              &nbsp; {% if user_linked_posts %}
+                {% for related_by_user in user_linked_posts %}
+              {% if related_by_user.related_question_id == related.post_ID %}
+              <i class="fa fa-check" style="margin-right: 10px;"></i>
+              {% endif %}
+                 {% endfor %}
+              {% endif %}
+              {% if related.title %}
+                {{ related.title }}
+              {% else %}
+                  Title-less post with ID: {{ related.post_ID }}
+              {% endif %}
+             </a>
+          </li>
+          {% endfor %}
 
-     {% endif %}
-      {{ related.title }}
+
+            {% if user_linked_posts %}
+            {% for related in user_linked_posts %}
+              <li>
+                  <a href="{% url 'search:detail' related.page related.related_question_id %}">
+            <i class="fa fa-user" style="margin-right: 10px;"></i>
+                       {% if related.related_question_title %}
+                 {{ related.related_question_title }}
+              {% else %}
+                  Title-less post with ID: {{ related.related_question_id }}
+              {% endif %}
                   </a>
-                </li>
-                  {% endfor %}
+                            </li>
+            {% endfor %}
+            {% endif %}
 
-            <li>         {% if user_linked_posts %}
-             {{ user_linked_posts }}
-                  {% endif %}</li>
+        </ul>
+      </div>
+    </div>
 
-</ul>
-                </div></div>
+    {% endif %}
 
-
-
-
-        {% endif %}
 
             <hr>
             {% if accepted_answer %}
