@@ -50,11 +50,12 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
                 for j in range(len(result_posts)):
                     if result_posts[j]["post_ID"] == i["post_ID"]:
                         if "linked_posts" not in result_posts[j]:
-                            result_posts[j]["linked_posts"] = [i['related_question_id']]
-                            result_posts[j]["linked_posts_titles"] = [i['related_question_title']]
-                        else:
-                            result_posts[j]["linked_posts"].append(i['related_question_id'])
-                            result_posts[j]["linked_posts_titles"].append(i['related_question_title'])
+                            result_posts[j]["linked_posts"] = i['related_question_id']
+                            result_posts[j]["linked_posts_titles"] = i['related_question_title']
+                        # else:
+                        #     result_posts[j]["linked_posts"].append(i['related_question_id'])
+                        #     result_posts[j]["linked_posts_titles"].append(i['related_question_title'])
+    # todo issue with multiple parsing linked posts with for pagination
 
     if siamese_search:
         return __search_siamese(result_posts)
@@ -116,7 +117,7 @@ def search_siamese_faissly(post_id, max_results=5):
     _, result_ids, _ = SearchConfig.indexed_post_bodies.search_and_reconstruct(normalized_post, max_results)
     result_ids = np.squeeze(result_ids)
     return result_ids[result_ids != post_id]
-    
+
 
 def get_post_links_from_users(result_post, page):
     post_links_search = PostLink.search().query("match", post_ID=result_post)
