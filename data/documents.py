@@ -198,6 +198,12 @@ class PostLink(Document):
 
     @staticmethod
     def get_display_info_for_links(links, page):
+        """
+        It  gets information about post links of related posts marked by users
+
+        :param links: post links of related posts marked by users
+        :param page: eg.: gamedev, stack overflow...
+        """
         links_info = []
         for link in links:
             info = PostLink.get_display_info_for_link(link, page)
@@ -208,6 +214,12 @@ class PostLink(Document):
 
     @staticmethod
     def get_display_info_for_link(link, page):
+        """
+        It  gets information about post links of related posts marked by users
+
+        :param link: post link of related posts marked by users
+        :param page: eg.: gamedev, stack overflow...
+        """
         post = Post.get_post(link.related_post_ID, page)
         return {"post_ID": link.post_ID,
                 "related_question_id": link.related_post_ID,

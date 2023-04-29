@@ -3,9 +3,9 @@ from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from elasticsearch_dsl.connections import connections
 
-from data.documents import Post, User, Comment, ES_HOSTS, ES_LOGIN
+from data.documents import Post, User, Comment, ES_HOSTS, ES_LOGIN, PostLink
 from data.utils import sanitize_html_for_web
-from .search import search
+from .search import search, search_siamese_faissly, get_post_links_from_users
 
 import datetime
 import json
@@ -154,7 +154,6 @@ def explore_questions(request):
 
 
 def detail(request, post_id, page):
-    # todo here compute similarity wit faiss
     """
     Post detail view controller
 
@@ -188,12 +187,21 @@ def detail(request, post_id, page):
     answers = Post.get_post_answers_information(post_result.post_ID, page, except_id)
     comments = Comment.get_post_comments_information(post_result.post_ID, page)
 
+    # gets siamese posts from vectored posts
+    siamese_posts = search_siamese_faissly(post_id)
+    siamese_post_results = [Post.get_post(i, page) for i in siamese_posts]
+    # gets linked posts by users
+    user_linked_posts = get_post_links_from_users([post_id], page)
+    # todo edit user_linked_posts
+
     # render the template
     return render(request, 'search/question_details.html', context={"display_search": True,
                                                                     "post": post,
                                                                     "accepted_answer": accepted_answer,
                                                                     "answers": answers,
-                                                                    "comments": comments})
+                                                                    "comments": comments,
+                                                                    "siamese_post_results": siamese_post_results,
+                                                                    "user_linked_posts": user_linked_posts})
 
 
 def question_search_content_loader(request, page=1):

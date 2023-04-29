@@ -1,5 +1,6 @@
 import time
-from itertools import permutations
+
+import numpy as np
 
 from data.documents import Post, PostLink
 from web.search.apps import SearchConfig
@@ -55,26 +56,24 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
                         result_posts[j]["linked_posts_titles"].append(i[0][2])
 
     if siamese_search:
-        return search_siamese(result_posts)
+        return __search_siamese(result_posts)
     else:
         return result_posts
 
 
-def search_siamese(result_posts: dict) -> dict:
+def __search_siamese(result_posts: dict) -> dict:
     """
     This function takes in a dictionary of posts and a search text, and returns a dictionary of posts that contain the
     "similarity" tag
     :param result_posts: This is the dictionary of posts that we got from the previous function
     :type result_posts: dict
-    :param search_text: The text to search for
-    :type search_text: str
     """
     encoded_posts = [
         encode_question(post["text"], SearchConfig.tokenizer) for post in result_posts]
     t1 = time.time()
     combinations = {}
-    # creates variation pairs for (first 3 and all) because it is still slow
-    for index, i in enumerate(encoded_posts[:3]):
+    # creates variation pairs for (first 2 and all) because it is still slow
+    for index, i in enumerate(encoded_posts[:2]):
         for jndex, j in enumerate(encoded_posts):
             if i != j:
                 combinations[str(index) + "_" + str(jndex)] = [i, j]
@@ -99,6 +98,30 @@ def search_siamese(result_posts: dict) -> dict:
     print(time.time() - t1)
 
     return result_posts
+
+
+def search_siamese_faissly(post_id, max_results=5):
+    """
+    This function searches for similar posts to a given post using the Siamese algorithm and Faiss library, with a maximum
+    number of results specified.
+    
+    :param post_id: The ID of the post that we want to find similar posts for
+    :param max_results: The maximum number of search results to return, defaults to 5 (optional)
+    """
+    normalized_post = np.zeros((1, SearchConfig.indexed_post_bodies.d))
+    vectorized_post = SearchConfig.indexed_post_bodies.reconstruct(post_id)
+    normalized_post[0, :len(vectorized_post)] = vectorized_post
+
+    _, result_ids, _ = SearchConfig.indexed_post_bodies.search_and_reconstruct(normalized_post, max_results)
+    result_ids = np.squeeze(result_ids)
+    return result_ids
+    
+
+def get_post_links_from_users(result_posts, page):
+    post_links_search = [PostLink.search().query("match", post_ID=i) for i in result_posts]
+    links_response = [i.execute() for i in post_links_search]
+    
+    return [PostLink.get_display_info_for_links(i.hits, page) for i in links_response]
 
 
 def search(search_type, search_text, page, posts_per_page, request, date_filter):

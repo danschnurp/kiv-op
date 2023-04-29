@@ -23,6 +23,39 @@
                     <p class="card-text">{{ post.text|safe }}</p>
                 </div>
             </div>
+                                {% if siamese_post_results %}
+   <hr>
+ <h6><i class="fas fa-cat" style="margin-right: 10px;"></i>Siamese posts:</h6>
+            <div class="card" id="siamese_post_results">
+                <div class="card-body">
+        <ul>
+                  {% for related in siamese_post_results %}
+            <li>
+ <a href="{% url 'search:detail' related.page related.post_ID %}">
+                 &nbsp;
+                     {% if user_linked_posts %}
+     {% if user_linked_posts == related.post_ID %}
+            <i class="fa fa-check" style="margin-right: 10px;"></i>
+       {% endif %}
+
+     {% endif %}
+      {{ related.title }}
+                  </a>
+                </li>
+                  {% endfor %}
+
+            <li>         {% if user_linked_posts %}
+             {{ user_linked_posts }}
+                  {% endif %}</li>
+
+</ul>
+                </div></div>
+
+
+
+
+        {% endif %}
+
             <hr>
             {% if accepted_answer %}
             <h6><i class="fas fa-comment-dots" style="margin-right: 10px;"></i>Accepted answer:</h6>
