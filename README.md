@@ -1,7 +1,10 @@
-# kiv-op
+## Stackexchange Siamese Posts Evaluation
 
-- ✅ Explore the provided model to search for similar issues and learn how to input and output. 
+- extending [web application](https://github.com/janpasek97/stackoverflow-siamese-network) by:
+    - [MQDD - Multimodal Question Duplicity Detection](https://arxiv.org/abs/2203.14093) which searches for similar questions among the first results of a user query. This approach showed that the inference of the MQDD model is not fast enough to run 50-500 times in real time on ordinary CPU.
 
--  ✅ Index the off-line Stack Overflow database in a suitable search engine (Elasticsearch is recommended)
+ - creating scripts for file-based index for similarity search [Faiss](https://github.com/facebookresearch/faiss) library
 
-- Create a web application that allows you to enter a question and accompanying source code. The application will search for the most similar question from the off-line Stack Overflow database for this input. Finally, it will allow automatic entry of the question into the Stack Overflow portal.
+
+
+
