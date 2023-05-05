@@ -1,9 +1,38 @@
+from torch import cuda, version, device, backends
 from tqdm import tqdm
 
 import numpy as np
 import torch
 from transformers import AutoTokenizer
 from transformers import LongformerModel
+
+
+def control_torch():
+    """
+    test if cuda is available
+    """
+    print("cuda availability: " + str(cuda.is_available()))
+
+    import gc
+    gc.collect()
+
+    if not cuda.is_available():
+        return "cpu"
+
+    print("version: " + version.cuda)
+    cuda.empty_cache()
+    # Storing ID of current CUDA device
+    cuda_id = cuda.current_device()
+    print(f"ID of current CUDA device:{cuda.current_device()}")
+    print(f"Name of current CUDA device:{cuda.get_device_name(cuda_id)}")
+
+    # VERY IMPORTANT
+    ######################################
+    backends.cudnn.enabled = True  #
+    backends.cudnn.benchmark = True  #
+    backends.cudnn.deterministic = True  #
+    #######################################
+    return "cuda"
 
 
 def prepare_tok_model(max_length=512):
@@ -16,6 +45,8 @@ def prepare_tok_model(max_length=512):
     tokenizer.init_kwargs["eos_token"] = "sep"
     # Loading the pretrained model.
     model = LongformerModel.from_pretrained("UWB-AIR/MQDD-duplicates")
+
+    model.to(control_torch())
 
     # creating example input
     tokenized_question_example = tokenizer(
