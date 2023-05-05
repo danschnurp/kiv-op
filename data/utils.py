@@ -23,7 +23,7 @@ def sanitize_html_for_web(value, display_code=True):
         if tag.name not in VALID_TAGS:
             tag.hidden = True
         elif tag.name == "code" and not display_code and tag.parent is not None:
-            if tag.parent.name == "pre":
+            if tag.parent.name == "pre" and tag.string is not None:  # todo bug?
                 tag.string.replace_with("Inserted code --- see details for code expansion")
 
     return str(soup)
