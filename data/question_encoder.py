@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 import numpy as np
 import torch
 from transformers import AutoTokenizer
@@ -87,7 +89,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
     encoded_result_list = []
-    for i in range(0, encoded_question.data["input_ids"].shape[0], batch_size):
+    for i in tqdm(range(0, encoded_question.data["input_ids"].shape[0], batch_size)):
         # reshaping (adding dimension) to have a batch size
         tokenized_question_example.data["input_ids"] = torch.reshape(
             encoded_question.data["input_ids"][i:i + batch_size],

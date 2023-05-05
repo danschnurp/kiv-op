@@ -1,7 +1,7 @@
 #  date: 24. 3. 2023
 #  author: Daniel Schnurpfeil
 #
-from data.indexers.faiss_indexer import index_part
+from faiss_indexer import index_part
 
 if __name__ == '__main__':
     import argparse

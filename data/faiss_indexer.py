@@ -7,8 +7,8 @@ import numpy as np
 from faiss import write_index, IndexFlatL2, IndexIDMap2
 from lxml.etree import XMLParser, parse
 
-from data.utils import make_output_dir, sanitize_html_for_web
-from data.indexers.question_encoder import encode_questions, prepare_tok_model
+from utils import make_output_dir, sanitize_html_for_web
+from question_encoder import encode_questions, prepare_tok_model
 
 
 def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, stop_at=None, output_dir_path=None):
@@ -73,7 +73,10 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     """
     # must be divisible by len of input data
     batch_size -= stop_at % batch_size
+    if stop_at % batch_size > 0:
+        batch_size -= stop_at % batch_size
     # cuts of data (for testing purposes)
+    print("batch_size is changed to:", batch_size)
     input_data = input_data[:stop_at]
     ids = ids[:stop_at]
 
