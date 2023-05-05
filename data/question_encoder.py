@@ -46,8 +46,6 @@ def prepare_tok_model(max_length=512):
     # Loading the pretrained model.
     model = LongformerModel.from_pretrained("UWB-AIR/MQDD-duplicates")
 
-    model.to(control_torch())
-
     # creating example input
     tokenized_question_example = tokenizer(
         "sample question", max_length=max_length,
@@ -55,7 +53,13 @@ def prepare_tok_model(max_length=512):
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
 
-    return tokenizer, model, tokenized_question_example
+    if "cuda" == control_torch():
+        model.to("cuda")
+        model.cuda()
+        tokenized_question_example.to("cuda")
+        # model.device("cuda")
+
+    return tokenizer, model, tokenized_question_example.to("cuda")
 
 
 def encode_question(question, tokenizer, model, max_length=512):
@@ -119,6 +123,9 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
         padding="max_length",
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
+    # todo edit for cpu
+    encoded_question.to("cuda")
+
     encoded_result_list = []
     for i in tqdm(range(0, encoded_question.data["input_ids"].shape[0], batch_size)):
         # reshaping (adding dimension) to have a batch size
@@ -133,10 +140,9 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
             encoded_question.data["attention_mask"][i:i + batch_size],
             (batch_size, encoded_question.data[
                 "attention_mask"].shape[1]))
-
         # calling the pre-trained language model UWB-AIR/MQDD-duplicates
         _, encoded_question_result = model(**tokenized_question_example)
         # unpacking results from batch size to list
-        encoded_result_list.extend(encoded_question_result.detach().numpy().tolist())
+        encoded_result_list.extend(encoded_question_result.detach().cpu().numpy().tolist())
 
     return encoded_result_list
