@@ -117,6 +117,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
     :param batch_size: The number of questions to be processed in a single batch. This can help speed up the encoding
     process by processing multiple questions at once, defaults to 1 (optional)
     """
+    print("tokenizing...")
     # Encoding the question into a list of integers.
     encoded_question = tokenizer(
         question, max_length=max_length,
@@ -125,7 +126,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
         truncation=True, return_tensors="pt")
     # todo edit for cpu
     encoded_question.to("cuda")
-
+    print("encoding...")
     encoded_result_list = []
     for i in tqdm(range(0, encoded_question.data["input_ids"].shape[0], batch_size)):
         # reshaping (adding dimension) to have a batch size
