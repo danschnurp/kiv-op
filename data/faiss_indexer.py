@@ -18,7 +18,7 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, s
                                desired_filename="/" + xml_file_name, xpath_query="//row/@" + part)
     ids = load_xml_data(input_folder=input_folder,
                         desired_filename="/" + xml_file_name, xpath_query="//row/@" + "Id")
-    print(xml_file_name, part, "loaded...")
+    print(len(ids), xml_file_name, part, "loaded...")
     t1 = time.time()
     if not output_dir_path:
         output_dir_path = input_folder
