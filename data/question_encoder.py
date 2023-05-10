@@ -53,13 +53,11 @@ def prepare_tok_model(max_length=512):
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
 
-    if "cuda" == control_torch():
-        model.to("cuda")
-        model.cuda()
-        tokenized_question_example.to("cuda")
-        # model.device("cuda")
+    this_device = control_torch()
+    model.to(this_device)
+    tokenized_question_example.to(this_device)
 
-    return tokenizer, model, tokenized_question_example.to("cuda")
+    return tokenizer, model, tokenized_question_example, this_device
 
 
 def encode_question(question, tokenizer, model, max_length=512):
@@ -102,11 +100,12 @@ def encode_question(question, tokenizer, model, max_length=512):
     return np.squeeze(encoded_question_result.detach().numpy())
 
 
-def encode_questions(question, tokenizer, model, tokenized_question_example, batch_size=1, max_length=512):
+def encode_questions(question, tokenizer, model, tokenized_question_example, this_device, batch_size=1, max_length=512):
     """
     This function encodes a given question using a tokenizer and a pre-trained language model, with a specified maximum
     length.
 
+    :param this_device: cpu or cuda
     :param question: The input question that needs to be encoded
     :param tokenizer: The tokenizer is a tool used to convert text into numerical values that can be processed by model.
     :param model: The model parameter refers to the pre-trained language model.
@@ -124,8 +123,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, bat
         padding="max_length",
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
-    # todo edit for cpu
-    encoded_question.to("cuda")
+    encoded_question.to(this_device)
     print("encoding...")
     encoded_result_list = []
     for i in tqdm(range(0, encoded_question.data["input_ids"].shape[0], batch_size)):

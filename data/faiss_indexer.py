@@ -81,13 +81,13 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     input_data = input_data[:stop_at]
     ids = ids[:stop_at]
 
-    tokenizer, model, tokenized_question_example = prepare_tok_model()
+    tokenizer, model, tokenized_question_example, this_device = prepare_tok_model()
     t1 = time.time()
     # sanitizing input data from html tags
     print("sanitizing input data from html tags")
     data = [sanitize_html_for_web(i.replace("\n", ""), display_code=False) for i in tqdm(input_data)]
     # encoding
-    data = encode_questions(data, tokenizer, model, tokenized_question_example, batch_size=batch_size)
+    data = encode_questions(data, tokenizer, model, tokenized_question_example, this_device, batch_size=batch_size)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
     # Finding the maximum length of the data for saving memory on disk 🤔
