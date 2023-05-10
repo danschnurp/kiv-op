@@ -1,0 +1,4 @@
+set TOKENIZERS_PARALLELISM=true && \
+ source /Users/danschnurpfeil/PycharmProjects/kiv-op/venv/bin/activate && \
+ python /Users/danschnurpfeil/PycharmProjects/kiv-op/data/posts_faiss_indexer.py -i "/Users/danschnurpfeil/Downloads/tex.stackexchange.com" -b 3
+

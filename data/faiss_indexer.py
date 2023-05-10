@@ -73,7 +73,8 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     :type batch_size: int
     """
     # must be divisible by len of input data
-    batch_size -= stop_at % batch_size
+    if stop_at % batch_size > 0:
+        batch_size -= stop_at % batch_size
     if stop_at % batch_size > 0:
         batch_size -= stop_at % batch_size
     # cuts of data (for testing purposes)
