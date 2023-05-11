@@ -121,7 +121,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, thi
     encoded_result_list = []
     for i in tqdm(range(0, len(question), batch_size)):
         encoded_question = tokenizer(
-            i, max_length=max_length,
+            question[i:int(batch_size+i)], max_length=max_length,
             padding="max_length",
             return_token_type_ids=True,
             truncation=True, return_tensors="pt")
