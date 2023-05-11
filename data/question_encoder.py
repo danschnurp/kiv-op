@@ -121,7 +121,7 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, thi
     encoded_result_list = []
     for i in tqdm(range(0, len(question), batch_size)):
         encoded_question = tokenizer(
-            question, max_length=max_length,
+            i, max_length=max_length,
             padding="max_length",
             return_token_type_ids=True,
             truncation=True, return_tensors="pt")
@@ -129,14 +129,14 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, thi
 
         # reshaping (adding dimension) to have a batch size
         tokenized_question_example.data["input_ids"] = torch.reshape(
-            encoded_question.data["input_ids"][i:i + batch_size],
+            encoded_question.data["input_ids"],
             (batch_size, encoded_question.data["input_ids"].shape[1]))
         tokenized_question_example.data["token_type_ids"] = torch.reshape(
-            encoded_question.data["token_type_ids"][i:i + batch_size],
+            encoded_question.data["token_type_ids"],
             (batch_size, encoded_question.data[
                 "token_type_ids"].shape[1]))
         tokenized_question_example.data["attention_mask"] = torch.reshape(
-            encoded_question.data["attention_mask"][i:i + batch_size],
+            encoded_question.data["attention_mask"],
             (batch_size, encoded_question.data[
                 "attention_mask"].shape[1]))
         # calling the pre-trained language model UWB-AIR/MQDD-duplicates
