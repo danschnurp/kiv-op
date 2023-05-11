@@ -116,17 +116,17 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, thi
     :param batch_size: The number of questions to be processed in a single batch. This can help speed up the encoding
     process by processing multiple questions at once, defaults to 1 (optional)
     """
-    print("tokenizing...")
-    # Encoding the question into a list of integers.
-    encoded_question = tokenizer(
-        question, max_length=max_length,
-        padding="max_length",
-        return_token_type_ids=True,
-        truncation=True, return_tensors="pt")
-    encoded_question.to(this_device)
+
     print("encoding...")
     encoded_result_list = []
-    for i in tqdm(range(0, encoded_question.data["input_ids"].shape[0], batch_size)):
+    for i in tqdm(range(0, len(question), batch_size)):
+        encoded_question = tokenizer(
+            question, max_length=max_length,
+            padding="max_length",
+            return_token_type_ids=True,
+            truncation=True, return_tensors="pt")
+        encoded_question.to(this_device)
+
         # reshaping (adding dimension) to have a batch size
         tokenized_question_example.data["input_ids"] = torch.reshape(
             encoded_question.data["input_ids"][i:i + batch_size],
