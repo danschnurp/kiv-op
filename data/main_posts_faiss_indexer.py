@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     if os.path.isdir(input_folder) and (not output_dir_path or os.path.isdir(output_dir_path)):
 
-        index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Body",
+        index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Body", offset=0,
                    batch_size=args.batch_size, stop_at=args.stop_at, output_dir_path=output_dir_path)
         # index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Title",
         #            batch_size=args.batch_size, stop_at=args.stop_at, output_dir_path=output_dir_path)

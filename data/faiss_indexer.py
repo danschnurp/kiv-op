@@ -11,7 +11,7 @@ from utils import make_output_dir, sanitize_html_for_web
 from question_encoder import encode_questions, prepare_tok_model
 
 
-def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, stop_at=None, output_dir_path=None):
+def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0, stop_at=None, output_dir_path=None):
     # Loading the data from the xml file.
     input_data = load_xml_data(input_folder=input_folder,
                                desired_filename="/" + xml_file_name, xpath_query="//row/@" + part)
@@ -31,6 +31,7 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, s
                                                               output_filename=xml_file_name[
                                                                               :-4]) + "/" + part + ".index",
                              stop_at=stop_at,
+                             offset=offset,
                              batch_size=batch_size
                              )
     print(part, "part processed in:", time.time() - t1, "sec")
@@ -54,7 +55,8 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
     return data
 
 
-def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int, stop_at: int):
+def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int,
+                             offset: int, stop_at: int):
     """
        Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
 
@@ -78,8 +80,8 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
         batch_size -= stop_at % batch_size
     # cuts of data (for testing purposes)
     print("batch_size is changed to:", batch_size)
-    input_data = input_data[:stop_at]
-    ids = ids[:stop_at]
+    input_data = input_data[offset:stop_at]
+    ids = ids[offset:stop_at]
 
     tokenizer, model, tokenized_question_example, this_device = prepare_tok_model()
     t1 = time.time()
