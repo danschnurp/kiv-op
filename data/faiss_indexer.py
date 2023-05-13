@@ -1,11 +1,10 @@
 #  date: 23. 3. 2023
 #  author: Daniel Schnurpfeil
 #
-from tqdm import tqdm
 import time
 
 import numpy as np
-from faiss import write_index, IndexFlatL2, IndexIDMap2
+from faiss import write_index, IndexFlatL2, IndexIDMap2, read_index
 from lxml.etree import XMLParser, parse
 
 from utils import make_output_dir, sanitize_html_for_web
@@ -111,3 +110,45 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     indexer.add_with_ids(data_matrix, ids)
     # Saving the indexed data to a file.
     write_index(indexer, output_file_path)
+
+
+def concatenate_two_indexed_files(index1_path: str, index2_path: str, output_file_path: str):
+
+    # Load the first index
+    index1 = read_index(index1_path)
+    n1, d1 = index1.ntotal, index1.d
+
+    # Load the second index
+    index2 = read_index(index2_path)
+    n2, d2 = index2.ntotal, index2.d
+
+    # Check that the two indexes have the same dimensionality
+    if d1 != d2:
+        raise ValueError("Dimensionality of indexes doesn't match")
+
+    # Retrieve the vectors and their IDs from the first index
+    ids1 = np.empty((n1,), dtype=np.int64)
+    vectors1 = np.empty((n1, d1), dtype=np.float32)
+    index1.search(np.zeros((1, d1), dtype=np.float32), n1)
+    index1.reconstruct_n(0, n1, vectors1)
+    index1.get_ids(ids1)
+
+    # Retrieve the vectors and their IDs from the second index
+    ids2 = np.empty((n2,), dtype=np.int64)
+    vectors2 = np.empty((n2, d2), dtype=np.float32)
+    index2.search(np.zeros((1, d2), dtype=np.float32), n2)
+    index2.reconstruct_n(0, n2, vectors2)
+    index2.get_ids(ids2)
+
+    # Concatenate the vectors and IDs
+    ids = np.concatenate((ids1, ids2))
+    vectors = np.concatenate((vectors1, vectors2))
+
+    # Create a new index with ID mapping
+    new_index = IndexFlatL2(index1)
+
+    # Add the merged vectors and IDs to the new index
+    new_index.add_with_ids(vectors, ids)
+
+    # Save the new index to a file
+    write_index(new_index, output_file_path)
