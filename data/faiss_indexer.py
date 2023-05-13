@@ -2,28 +2,34 @@
 #  author: Daniel Schnurpfeil
 #
 import time
+from xml.etree.ElementTree import iterparse
 
 import numpy as np
 from faiss import write_index, IndexFlatL2, IndexIDMap2, read_index
-from lxml.etree import XMLParser, parse
 
 from utils import make_output_dir, sanitize_html_for_web
 from question_encoder import encode_questions, prepare_tok_model
 
 
-def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0, stop_at=None, output_dir_path=None):
+def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0, stop_at=None,
+               output_dir_path=None):
+    if stop_at == -1:
+        xpath_query = "//row/@" + part
+        xpath_query_ids = "//row/@" + "Id"
+    else:
+        xpath_range = "[position() >= " + str(offset) + " and not(position() > " + str(stop_at) + ")]"
+        xpath_query = "//row/@" + part + xpath_range
+        xpath_query_ids = "//row/@" + "Id" + xpath_range
     # Loading the data from the xml file.
     input_data = load_xml_data(input_folder=input_folder,
-                               desired_filename="/" + xml_file_name, xpath_query="//row/@" + part)
+                               desired_filename="/" + xml_file_name, xpath_query=xpath_query)
     ids = load_xml_data(input_folder=input_folder,
-                        desired_filename="/" + xml_file_name, xpath_query="//row/@" + "Id")
+                        desired_filename="/" + xml_file_name, xpath_query=xpath_query_ids)
     print(len(ids), xml_file_name, part, "loaded...")
     t1 = time.time()
     if not output_dir_path:
         output_dir_path = input_folder
     output_dir_path = make_output_dir("faiss_indexed_data", output_dir_path)
-    if stop_at == -1:
-        stop_at = len(input_data)
     # Indexing the part.
     index_with_faiss_to_file(input_data=input_data,
                              ids=ids,
@@ -48,10 +54,28 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
     :param xpath_query: This is the xpath query that will be used to extract the data from the XML file
     :type xpath_query: str
     """
-    # Parsing the XML file.
-    root = parse(input_folder + desired_filename, parser=XMLParser(huge_tree=True))
-    # Getting the title of each post.
-    data = root.xpath(xpath_query)
+
+    data = []
+    counter = 0
+
+    # open the XML file
+    with open(input_folder + desired_filename, 'rb') as f:
+        # create an iterator for the XML file todo define start end
+        context = iterparse(f, events=('start', 'end'))
+
+        # get the root element
+        _, root = next(context)
+
+        # loop through the elements
+        for event, elem in context:
+            if event == 'end' and elem.tag == 'record':
+                # todo process the element
+                print()
+                exit(0)
+
+                # clear the element to free memory
+                root.clear()
+
     return data
 
 
@@ -115,7 +139,6 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
 
 
 def concatenate_two_indexed_files(index1_path: str, index2_path: str, output_file_path: str):
-
     # Load the first index
     index1 = read_index(index1_path)
     n1, d1 = index1.ntotal, index1.d
