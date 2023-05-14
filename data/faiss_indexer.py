@@ -4,27 +4,23 @@
 import time
 from xml.etree.ElementTree import iterparse
 
+import faiss
 import numpy as np
-from faiss import write_index, IndexFlatL2, IndexIDMap2, read_index
+from faiss import write_index, IndexFlatL2, read_index, IndexIVFFlat, METRIC_L2, vector_to_array, extract_index_ivf
 
 from utils import make_output_dir, sanitize_html_for_web
 from question_encoder import encode_questions, prepare_tok_model
 
 
-def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0, stop_at=None,
+def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0., stop_at=float("inf"),
                output_dir_path=None):
-    if stop_at == -1:
-        xpath_query = "//row/@" + part
-        xpath_query_ids = "//row/@" + "Id"
-    else:
-        xpath_range = "[position() >= " + str(offset) + " and not(position() > " + str(stop_at) + ")]"
-        xpath_query = "//row/@" + part + xpath_range
-        xpath_query_ids = "//row/@" + "Id" + xpath_range
+    xpath_query = './/*[@class="' + part + '"]/@' + part
+    xpath_query_ids = './/*[@class="' + "Id" + '"]/@' + 'Id'
     # Loading the data from the xml file.
-    input_data = load_xml_data(input_folder=input_folder,
-                               desired_filename="/" + xml_file_name, xpath_query=xpath_query)
-    ids = load_xml_data(input_folder=input_folder,
-                        desired_filename="/" + xml_file_name, xpath_query=xpath_query_ids)
+    print("loading:", xml_file_name)
+    input_data, ids = load_xml_data(input_folder=input_folder, offset=offset,
+                                    stop_at=stop_at, desired_filename="/" + xml_file_name, part=part)
+
     print(len(ids), xml_file_name, part, "loaded...")
     t1 = time.time()
     if not output_dir_path:
@@ -35,7 +31,9 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, o
                              ids=ids,
                              output_file_path=make_output_dir(output_dir=output_dir_path,
                                                               output_filename=xml_file_name[
-                                                                              :-4]) + "/" + part + ".index",
+                                                                              :-4]) + "/" + part + "_" + str(offset)[
+                                                                                                         :-2] + "_" + str(
+                                 stop_at)[:-2] + ".index",
                              stop_at=stop_at,
                              offset=offset,
                              batch_size=batch_size
@@ -43,7 +41,8 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, o
     print(part, "part processed in:", time.time() - t1, "sec")
 
 
-def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) -> list:
+def load_xml_data(input_folder: str, desired_filename: str, stop_at: float, offset: float,
+                  part: str, ids_only=False) -> tuple:
     """
     Loads XML data from a file in a folder, and returns a list of the data.
 
@@ -56,11 +55,12 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
     """
 
     data = []
-    counter = 0
+    ids = []
+    counter = 0.
 
     # open the XML file
     with open(input_folder + desired_filename, 'rb') as f:
-        # create an iterator for the XML file todo define start end
+        # create an iterator for the XML file
         context = iterparse(f, events=('start', 'end'))
 
         # get the root element
@@ -68,19 +68,21 @@ def load_xml_data(input_folder: str, desired_filename: str, xpath_query: str) ->
 
         # loop through the elements
         for event, elem in context:
-            if event == 'end' and elem.tag == 'record':
-                # todo process the element
-                print()
-                exit(0)
-
+            if event == 'end' and elem.tag == 'row':
+                if offset <= counter < stop_at:
+                    if not ids_only:
+                        data.append(elem.attrib[part])
+                    ids.append(int(elem.attrib["Id"]))
+                counter += 1.
                 # clear the element to free memory
                 root.clear()
-
-    return data
+                if counter > stop_at:
+                    break
+    return data, ids
 
 
 def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int,
-                             offset: int, stop_at: int):
+                             offset: float, stop_at: float):
     """
        Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
 
@@ -104,8 +106,6 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
         batch_size -= stop_at % batch_size
     # cuts of data (for testing purposes)
     print("batch_size is changed to:", batch_size)
-    input_data = input_data[offset:stop_at]
-    ids = ids[offset:stop_at]
 
     tokenizer, model, tokenized_question_example, this_device = prepare_tok_model()
     t1 = time.time()
@@ -116,64 +116,26 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     data = encode_questions(data, tokenizer, model, tokenized_question_example, this_device, batch_size=batch_size)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
-    # Finding the maximum length of the data for saving memory on disk 🤔
-    max_indexed_length = 0
-    for i in data:
-        curr_len = len(i)
-        if max_indexed_length < curr_len:
-            max_indexed_length = curr_len
-    # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
-    data_matrix = np.zeros((len(data), max_indexed_length))
-    for index, i in enumerate(data):
-        # Converting the tensor into a numpy array and then adding it to the matrix.
-        j = np.squeeze(i)
-        data_matrix[index, :len(j)] = j
+    quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
+    indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
 
-    indexer = IndexFlatL2(max_indexed_length)  # build the index
-
-    indexer = IndexIDMap2(indexer)
+    indexer.train(data)
     # Adding the matrix to the indexer.
-    indexer.add_with_ids(data_matrix, ids)
+    indexer.add_with_ids(data, ids)
     # Saving the indexed data to a file.
+    print("saving to", output_file_path)
     write_index(indexer, output_file_path)
 
 
 def concatenate_two_indexed_files(index1_path: str, index2_path: str, output_file_path: str):
     # Load the first index
     index1 = read_index(index1_path)
-    n1, d1 = index1.ntotal, index1.d
 
-    # Load the second index
+    # Load the second index from a file
     index2 = read_index(index2_path)
-    n2, d2 = index2.ntotal, index2.d
 
-    # Check that the two indexes have the same dimensionality
-    if d1 != d2:
-        raise ValueError("Dimensionality of indexes doesn't match")
+    # Merge the indexes todo this does not work at all
+    faiss.merge_into(index1, index2, True)
 
-    # Retrieve the vectors and their IDs from the first index
-    ids1 = np.empty((n1,), dtype=np.int64)
-    vectors1 = np.empty((n1, d1), dtype=np.float32)
-    index1.search(np.zeros((1, d1), dtype=np.float32), n1)
-    index1.reconstruct_n(0, n1, vectors1)
-    index1.get_ids(ids1)
-
-    # Retrieve the vectors and their IDs from the second index
-    ids2 = np.empty((n2,), dtype=np.int64)
-    vectors2 = np.empty((n2, d2), dtype=np.float32)
-    index2.search(np.zeros((1, d2), dtype=np.float32), n2)
-    index2.reconstruct_n(0, n2, vectors2)
-    index2.get_ids(ids2)
-
-    # Concatenate the vectors and IDs
-    ids = np.concatenate((ids1, ids2))
-    vectors = np.concatenate((vectors1, vectors2))
-
-    # Create a new index with ID mapping
-    new_index = IndexFlatL2(index1)
-
-    # Add the merged vectors and IDs to the new index
-    new_index.add_with_ids(vectors, ids)
-
-    # Save the new index to a file
-    write_index(new_index, output_file_path)
+    # Save the merged index to a file
+    write_index(index1, output_file_path)

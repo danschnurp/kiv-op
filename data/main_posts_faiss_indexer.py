@@ -10,7 +10,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input_dir_path', required=True)
     parser.add_argument('-b', '--batch_size', default=5, type=int)
-    parser.add_argument('-s', '--stop_at', default=-1, type=int)
+    parser.add_argument('-s', '--stop_at', default=float("inf"), type=float)
+    parser.add_argument('--offset', default=0., type=float)
     parser.add_argument('-o', '--output_dir_path', default=None)
     args = parser.parse_args()
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
 
     if os.path.isdir(input_folder) and (not output_dir_path or os.path.isdir(output_dir_path)):
 
-        index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Body", offset=0,
+        index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Body", offset=args.offset,
                    batch_size=args.batch_size, stop_at=args.stop_at, output_dir_path=output_dir_path)
         # index_part(input_folder=input_folder, xml_file_name="Posts.xml", part="Title",
         #            batch_size=args.batch_size, stop_at=args.stop_at, output_dir_path=output_dir_path)

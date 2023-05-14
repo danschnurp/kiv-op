@@ -14,4 +14,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if os.path.isfile(args.input1_file_path) and os.path.isfile(args.input2_file_path):
-        concatenate_two_indexed_files(args.input1_file_path, args.input2_file_path, args.output_file_path)
+        concatenate_two_indexed_files(args.input1_file_path, args.input2_file_path, args.output_file_path,
+                                      input_folder="D:/_KIV_OP/stackoverflow.com-Posts", offset=0, stop_at=200)

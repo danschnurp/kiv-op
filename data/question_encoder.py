@@ -60,7 +60,7 @@ def prepare_tok_model(max_length=512):
     return tokenizer, model, tokenized_question_example, this_device
 
 
-def encode_question(question, tokenizer, model, max_length=512):
+def encode_question(question, tokenizer, model, max_length=512, this_device="cpu"):
     """
     This function encodes a given question using a tokenizer and a pre-trained language model, with a specified maximum
     length.
@@ -71,33 +71,29 @@ def encode_question(question, tokenizer, model, max_length=512):
     :param max_length: The maximum length of the input sequence that the model can handle. If the input sequence is longer
     than this, it will be truncated, defaults to 512 (optional)
     """
-    # Encoding the question into a list of integers.
-    encoded_question = tokenizer.encode(
-        question,
-        max_length=max_length,
-        truncation=True)
-
-    # Preparing the encoded question for the model.
-    encoded_question = tokenizer.prepare_for_model(
-        encoded_question,
-        [],
-        max_length=max_length,
+    encoded_question = tokenizer(
+        question, max_length=max_length,
         padding="max_length",
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
+    encoded_question.to(this_device)
 
-    # reshaping (adding dimension) to have a batch size of 1
-    encoded_question.data["input_ids"] = torch.reshape(encoded_question.data["input_ids"],
-                                                       (1, encoded_question.data["input_ids"].shape[0]))
-    encoded_question.data["token_type_ids"] = torch.reshape(encoded_question.data["token_type_ids"],
-                                                            (1, encoded_question.data["token_type_ids"].shape[0]))
-    encoded_question.data["attention_mask"] = torch.reshape(encoded_question.data["attention_mask"],
-                                                            (1, encoded_question.data["attention_mask"].shape[0]))
-
+    # reshaping (adding dimension) to have a batch size
+    encoded_question.data["input_ids"] = torch.reshape(
+        encoded_question.data["input_ids"],
+        (1, encoded_question.data["input_ids"].shape[1]))
+    encoded_question.data["token_type_ids"] = torch.reshape(
+        encoded_question.data["token_type_ids"],
+        (1, encoded_question.data[
+            "token_type_ids"].shape[1]))
+    encoded_question.data["attention_mask"] = torch.reshape(
+        encoded_question.data["attention_mask"],
+        (1, encoded_question.data[
+            "attention_mask"].shape[1]))
     # calling the pre-trained language model UWB-AIR/MQDD-duplicates
     _, encoded_question_result = model(**encoded_question)
 
-    return np.squeeze(encoded_question_result.detach().numpy())
+    return np.squeeze(encoded_question_result.detach().cpu().numpy().tolist())
 
 
 def encode_questions(question, tokenizer, model, tokenized_question_example, this_device, batch_size=1, max_length=512):
@@ -144,4 +140,4 @@ def encode_questions(question, tokenizer, model, tokenized_question_example, thi
         # unpacking results from batch size to list
         encoded_result_list.extend(encoded_question_result.detach().cpu().numpy().tolist())
 
-    return encoded_result_list
+    return np.array(encoded_result_list)
