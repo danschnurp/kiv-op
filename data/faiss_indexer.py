@@ -6,7 +6,7 @@ from xml.etree.ElementTree import iterparse
 
 import faiss
 import numpy as np
-from faiss import write_index, IndexFlatL2, read_index, IndexIVFFlat, METRIC_L2, vector_to_array, extract_index_ivf
+from faiss import write_index, IndexFlatL2, read_index, IndexIVFFlat, METRIC_L2, extract_index_ivf
 
 from utils import make_output_dir, sanitize_html_for_web
 from question_encoder import encode_questions, prepare_tok_model
@@ -14,8 +14,6 @@ from question_encoder import encode_questions, prepare_tok_model
 
 def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0., stop_at=float("inf"),
                output_dir_path=None):
-    xpath_query = './/*[@class="' + part + '"]/@' + part
-    xpath_query_ids = './/*[@class="' + "Id" + '"]/@' + 'Id'
     # Loading the data from the xml file.
     print("loading:", xml_file_name)
     input_data, ids = load_xml_data(input_folder=input_folder, offset=offset,
@@ -42,7 +40,7 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, o
 
 
 def load_xml_data(input_folder: str, desired_filename: str, stop_at: float, offset: float,
-                  part: str, ids_only=False) -> tuple:
+                  part="Body", ids_only=False) -> tuple:
     """
     Loads XML data from a file in a folder, and returns a list of the data.
 
@@ -125,17 +123,3 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     # Saving the indexed data to a file.
     print("saving to", output_file_path)
     write_index(indexer, output_file_path)
-
-
-def concatenate_two_indexed_files(index1_path: str, index2_path: str, output_file_path: str):
-    # Load the first index
-    index1 = read_index(index1_path)
-
-    # Load the second index from a file
-    index2 = read_index(index2_path)
-
-    # Merge the indexes todo this does not work at all
-    faiss.merge_into(index1, index2, True)
-
-    # Save the merged index to a file
-    write_index(index1, output_file_path)
