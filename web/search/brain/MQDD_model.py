@@ -24,6 +24,17 @@ class ClsHeadModelMQDD(torch.nn.Module):
         self._relu = torch.nn.ReLU()
         self._softmax = torch.nn.Softmax(dim=1)
 
+    def encode_only(self, x):
+        input_1, input_1_mask, input_1_tok_types = x.values()
+        input_1, input_1_mask, input_1_tok_types = torch.squeeze(input_1), torch.squeeze(input_1_mask), torch.squeeze(
+            input_1_tok_types)
+
+        input_1, input_1_mask, input_1_tok_types = torch.reshape(input_1, (1, input_1.shape[0])), \
+                                                   torch.reshape(input_1_mask, (1, input_1_mask.shape[0])), \
+                                                   torch.reshape(input_1_tok_types, (1, input_1_tok_types.shape[0]))
+
+        return self.bert_model(input_1, input_1_mask, None, token_type_ids=input_1_tok_types)[1]
+
     def forward(self, x):
         input_1, input_1_mask, input_1_tok_types, input_2, input_2_mask, input_2_tok_types = x.values()
         input_1, input_1_mask, input_1_tok_types = torch.squeeze(input_1), torch.squeeze(input_1_mask), torch.squeeze(

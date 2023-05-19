@@ -104,42 +104,42 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     :type batch_size: int
     """
 
-    tokenizer, model, tokenized_question_example, this_device = prepare_tok_model()
+    tokenizer, model, this_device, max_len = prepare_tok_model()
     t1 = time.time()
     # sanitizing input data from html tags
     print("sanitizing input data from html tags")
     data = [sanitize_html_for_web(i, display_code=False) for i in tqdm(input_data)]
     # encoding
-    data = encode_questions(data, tokenizer, model, tokenized_question_example, this_device, batch_size=batch_size)
+    data = encode_questions(data, tokenizer, model, this_device, batch_size=batch_size, max_length=max_len)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
-    # for huge indexes
-    quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
-    indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
-
-    indexer.train(data)
-    # Adding the matrix to the indexer.
-    indexer.add_with_ids(data, ids)
+    # # for huge indexes
+    # quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
+    # indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
+    #
+    # indexer.train(data)
+    # # Adding the matrix to the indexer.
+    # indexer.add_with_ids(data, ids)
 
     # ################################################################################################################
     # Finding the maximum length of the data for saving memory on disk 🤔
-    # max_indexed_length = 0
-    # for i in data:
-    #     curr_len = len(i)
-    #     if max_indexed_length < curr_len:
-    #         max_indexed_length = curr_len
-    # # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
-    # data_matrix = np.zeros((len(data), max_indexed_length))
-    # for index, i in enumerate(data):
-    #     # Converting the tensor into a numpy array and then adding it to the matrix.
-    #     j = np.squeeze(i)
-    #     data_matrix[index, :len(j)] = j
-    #
-    # indexer = IndexFlatL2(max_indexed_length)  # build the index
-    #
-    # indexer = IndexIDMap2(indexer)
-    # # Adding the matrix to the indexer.
-    # indexer.add_with_ids(data_matrix, ids)
+    max_indexed_length = 0
+    for i in data:
+        curr_len = len(i)
+        if max_indexed_length < curr_len:
+            max_indexed_length = curr_len
+    # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
+    data_matrix = np.zeros((len(data), max_indexed_length))
+    for index, i in enumerate(data):
+        # Converting the tensor into a numpy array and then adding it to the matrix.
+        j = np.squeeze(i)
+        data_matrix[index, :len(j)] = j
+
+    indexer = IndexFlatL2(max_indexed_length)  # build the index
+
+    indexer = IndexIDMap2(indexer)
+    # Adding the matrix to the indexer.
+    indexer.add_with_ids(data_matrix, ids)
     # ################################################################################################################
     # Saving the indexed data to a file.
     print("saving to", output_file_path)

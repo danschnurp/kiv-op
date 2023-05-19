@@ -6,7 +6,7 @@ from pandas import read_parquet
 from tqdm import tqdm
 
 from data.faiss_indexer import index_with_faiss_to_file
-from data.question_encoder import encode_question, prepare_tok_model
+from data.question_encoder import encode_questions, prepare_tok_model
 from data.utils import sanitize_html_for_web
 
 
@@ -35,10 +35,7 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     :param question: The question for which we want to find the most similar data point in the indexed data
     :param true_id: The true ID of the document that should be the top result for the given question
     """
-    question = sanitize_html_for_web(question, display_code=False)
-    encoded_question = encode_question(question=question, tokenizer=tokenizer,
-                                       model=model, this_device=this_device)
-    normalized_question = np.expand_dims(encoded_question, axis=0)
+    normalized_question = np.expand_dims(question, axis=0)
     tp = 0
     tn = 0
     fp = 0
@@ -72,7 +69,7 @@ class Test(TestCase):
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
         print("(len data)", len(data))
-        data = data[:1000]
+        data = data[:500]
         data = data[(data.label == 0) | (data.label == 3)]
         self.dup = ("duplicates:", len(data.label[data.label == 0]))
         self.diff = ("diffs:", len(data.label[data.label == 3]))
@@ -88,10 +85,12 @@ class Test(TestCase):
         self.indexes = list(np.arange(0, len(self.second_posts)))
 
     def test_body(self):
-        tokenizer, model, _, this_device = prepare_tok_model()
+        tokenizer, model, this_device, max_len = prepare_tok_model()
         indexes = [read_index(self.path)]
+        data = [sanitize_html_for_web(i, display_code=False) for i in tqdm(self.second_posts)]
+        encoded_question = encode_questions(data, tokenizer, model, max_length=max_len, this_device=this_device)
         tp, tn, fp, fn = 0, 0, 0, 0
-        for id, index, post in (zip(self.ids, tqdm(self.indexes), self.second_posts)):
+        for id, index, post in (zip(self.ids, tqdm(self.indexes), encoded_question)):
             tp1, tn1, fp1, fn1 =test_faiss_indexed_data(
                 indexes=indexes,
                 question=post,
