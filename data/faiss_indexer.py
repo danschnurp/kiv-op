@@ -23,6 +23,15 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, o
     t1 = time.time()
     if not output_dir_path:
         output_dir_path = input_folder
+
+    # must be divisible by len of input data
+    if stop_at % batch_size > 0:
+        batch_size -= stop_at % batch_size
+    if stop_at % batch_size > 0:
+        batch_size -= stop_at % batch_size
+    # cuts of data (for testing purposes)
+    print("batch_size is changed to:", batch_size)
+
     output_dir_path = make_output_dir("faiss_indexed_data", output_dir_path)
     # Indexing the part.
     f_name = make_output_dir(output_dir=output_dir_path,
@@ -32,8 +41,6 @@ def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, o
     index_with_faiss_to_file(input_data=input_data,
                              ids=ids,
                              output_file_path=f_name,
-                             stop_at=stop_at,
-                             offset=offset,
                              batch_size=batch_size
                              )
     print(part, "part processed in:", time.time() - t1, "sec")
@@ -79,8 +86,7 @@ def load_xml_data(input_folder: str, desired_filename: str, stop_at: float, offs
     return data, ids
 
 
-def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int,
-                             offset: float, stop_at: float, return_instead=False):
+def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int):
     """
        Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
 
@@ -97,13 +103,6 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     process. This can affect the speed and memory usage of the indexing process
     :type batch_size: int
     """
-    # must be divisible by len of input data
-    if stop_at % batch_size > 0:
-        batch_size -= stop_at % batch_size
-    if stop_at % batch_size > 0:
-        batch_size -= stop_at % batch_size
-    # cuts of data (for testing purposes)
-    print("batch_size is changed to:", batch_size)
 
     tokenizer, model, tokenized_question_example, this_device = prepare_tok_model()
     t1 = time.time()
@@ -115,35 +114,33 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
     # for huge indexes
-    # quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
-    # indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
-    #
-    # indexer.train(data)
-    # # Adding the matrix to the indexer.
-    # indexer.add_with_ids(data, ids)
+    quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
+    indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
+
+    indexer.train(data)
+    # Adding the matrix to the indexer.
+    indexer.add_with_ids(data, ids)
 
     # ################################################################################################################
     # Finding the maximum length of the data for saving memory on disk 🤔
-    max_indexed_length = 0
-    for i in data:
-        curr_len = len(i)
-        if max_indexed_length < curr_len:
-            max_indexed_length = curr_len
-    # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
-    data_matrix = np.zeros((len(data), max_indexed_length))
-    for index, i in enumerate(data):
-        # Converting the tensor into a numpy array and then adding it to the matrix.
-        j = np.squeeze(i)
-        data_matrix[index, :len(j)] = j
-
-    indexer = IndexFlatL2(max_indexed_length)  # build the index
-
-    indexer = IndexIDMap2(indexer)
-    # Adding the matrix to the indexer.
-    indexer.add_with_ids(data_matrix, ids)
+    # max_indexed_length = 0
+    # for i in data:
+    #     curr_len = len(i)
+    #     if max_indexed_length < curr_len:
+    #         max_indexed_length = curr_len
+    # # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
+    # data_matrix = np.zeros((len(data), max_indexed_length))
+    # for index, i in enumerate(data):
+    #     # Converting the tensor into a numpy array and then adding it to the matrix.
+    #     j = np.squeeze(i)
+    #     data_matrix[index, :len(j)] = j
+    #
+    # indexer = IndexFlatL2(max_indexed_length)  # build the index
+    #
+    # indexer = IndexIDMap2(indexer)
+    # # Adding the matrix to the indexer.
+    # indexer.add_with_ids(data_matrix, ids)
     # ################################################################################################################
-    if return_instead:
-        return [indexer], data_matrix
     # Saving the indexed data to a file.
     print("saving to", output_file_path)
     write_index(indexer, output_file_path)

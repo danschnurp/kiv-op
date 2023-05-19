@@ -44,7 +44,7 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     fp = 0
     fn = 0
     for index in indexes:
-        D, I = index.search(normalized_question, 5)  # actual search
+        I = index.search(normalized_question, 5)  # actual search
         # print("ID:", true_id)
         I = np.squeeze(I)
         # print("found IDS:", I[:5])
@@ -74,16 +74,14 @@ class Test(TestCase):
         print("(len data)", len(data))
         data = data[:1000]
         data = data[(data.label == 0) | (data.label == 3)]
-        print("duplicates:", len(data.label[data.label == 0]))
-        print("diffs:", len(data.label[data.label == 3]))
+        self.dup = ("duplicates:", len(data.label[data.label == 0]))
+        self.diff = ("diffs:", len(data.label[data.label == 3]))
         print("(len data) filtered", len(data))
-        # exit(0)
 
         self.path = "./test.index"
         self.first_posts = list(data.first_post)
         index_with_faiss_to_file(self.first_posts, list(np.arange(0, len(self.first_posts))),
-                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1, 0,
-                                 len(self.first_posts))
+                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1)
 
         self.second_posts = data.second_post
         self.ids = data.label
@@ -104,6 +102,7 @@ class Test(TestCase):
             tn += tn1
             fp += fp1
             fn += fn1
-
+        print(*self.dup)
+        print(*self.diff)
         print("tp", tp, "fp", fp)
         print("fn", fn, "tn", tn)
