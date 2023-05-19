@@ -80,7 +80,7 @@ def load_xml_data(input_folder: str, desired_filename: str, stop_at: float, offs
 
 
 def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str, batch_size: int,
-                             offset: float, stop_at: float):
+                             offset: float, stop_at: float, return_instead=False):
     """
        Indexes list of text with "UWB-AIR/MQDD-duplicates" tokenizer and saves it to file
 
@@ -114,36 +114,36 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     data = encode_questions(data, tokenizer, model, tokenized_question_example, this_device, batch_size=batch_size)
     print("sanitized and encoded in:", time.time() - t1, "sec")
 
-    quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
-    indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
+    # for huge indexes
+    # quantizer = IndexFlatL2(data.shape[1])  # the quantizer used for clustering
+    # indexer = IndexIVFFlat(quantizer, data.shape[1], data.shape[0], METRIC_L2)
+    #
+    # indexer.train(data)
+    # # Adding the matrix to the indexer.
+    # indexer.add_with_ids(data, ids)
 
-    indexer.train(data)
+    # ################################################################################################################
+    # Finding the maximum length of the data for saving memory on disk 🤔
+    max_indexed_length = 0
+    for i in data:
+        curr_len = len(i)
+        if max_indexed_length < curr_len:
+            max_indexed_length = curr_len
+    # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
+    data_matrix = np.zeros((len(data), max_indexed_length))
+    for index, i in enumerate(data):
+        # Converting the tensor into a numpy array and then adding it to the matrix.
+        j = np.squeeze(i)
+        data_matrix[index, :len(j)] = j
+
+    indexer = IndexFlatL2(max_indexed_length)  # build the index
+
+    indexer = IndexIDMap2(indexer)
     # Adding the matrix to the indexer.
-    indexer.add_with_ids(data, ids)
-
-    #     # tp 9 fp 44
-    #     # fn 1 tn 135
+    indexer.add_with_ids(data_matrix, ids)
     # ################################################################################################################
-    #     # Finding the maximum length of the data for saving memory on disk 🤔
-    #     max_indexed_length = 0
-    #     for i in data:
-    #         curr_len = len(i)
-    #         if max_indexed_length < curr_len:
-    #             max_indexed_length = curr_len
-    #     # Creating a matrix of zeros with the size of the number of data and the maximum length of the data.
-    #     data_matrix = np.zeros((len(data), max_indexed_length))
-    #     for index, i in enumerate(data):
-    #         # Converting the tensor into a numpy array and then adding it to the matrix.
-    #         j = np.squeeze(i)
-    #         data_matrix[index, :len(j)] = j
-    #
-    #     indexer = IndexFlatL2(max_indexed_length)  # build the index
-    #
-    #     indexer = IndexIDMap2(indexer)
-    #     # Adding the matrix to the indexer.
-    #     indexer.add_with_ids(data_matrix, ids)
-    # ################################################################################################################
-
+    if return_instead:
+        return [indexer], data_matrix
     # Saving the indexed data to a file.
     print("saving to", output_file_path)
     write_index(indexer, output_file_path)

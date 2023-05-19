@@ -1,8 +1,7 @@
-import os
 from unittest import TestCase
 
 import numpy as np
-from faiss import read_index, extract_index_ivf
+from faiss import read_index
 from pandas import read_parquet
 from tqdm import tqdm
 
@@ -36,30 +35,27 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     :param question: The question for which we want to find the most similar data point in the indexed data
     :param true_id: The true ID of the document that should be the top result for the given question
     """
-
-    normalized_question = np.zeros((1, indexes[0].d))
-
     question = sanitize_html_for_web(question, display_code=False)
     encoded_question = encode_question(question=question, tokenizer=tokenizer,
                                        model=model, this_device=this_device)
-    normalized_question[0, :len(encoded_question)] = encoded_question.astype(np.float32)
+    normalized_question = np.expand_dims(encoded_question, axis=0)
     tp = 0
     tn = 0
     fp = 0
     fn = 0
     for index in indexes:
-        D, I = index.search(normalized_question, 10)  # actual search
+        D, I = index.search(normalized_question, 5)  # actual search
         # print("ID:", true_id)
-        I = np.squeeze(I[:10])
+        I = np.squeeze(I)
         # print("found IDS:", I[:5])
         # similar
-        if similarity in [0] and true_id in I:
+        if similarity == 0 and true_id in I:
             tp += 1
         # different
         elif similarity == 3 and true_id not in I:
             tn += 1
         # similar negative
-        elif similarity in [0] and true_id not in I:
+        elif similarity == 0 and true_id not in I:
             fp += 1
         # different negative
         elif similarity == 3 and true_id in I:
@@ -75,8 +71,13 @@ class Test(TestCase):
 
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
-
-        data = data[:500]
+        print("(len data)", len(data))
+        data = data[:1000]
+        data = data[(data.label == 0) | (data.label == 3)]
+        print("duplicates:", len(data.label[data.label == 0]))
+        print("diffs:", len(data.label[data.label == 3]))
+        print("(len data) filtered", len(data))
+        # exit(0)
 
         self.path = "./test.index"
         self.first_posts = list(data.first_post)
