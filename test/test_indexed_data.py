@@ -1,12 +1,13 @@
 from unittest import TestCase
 
 import numpy as np
+import torch
 from faiss import read_index
 from pandas import read_parquet
 from tqdm import tqdm
 
 from data.faiss_indexer import index_with_faiss_to_file
-from data.question_encoder import encode_questions, prepare_tok_model
+from data.question_encoder import encode_questions, prepare_tok_model, tokenize_question
 from data.utils import sanitize_html_for_web
 
 
@@ -41,22 +42,21 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     fp = 0
     fn = 0
     for index in indexes:
-        I = index.search(normalized_question, 5)  # actual search
+        I = index.search_and_reconstruct(normalized_question, 5)  # actual search
         # print("ID:", true_id)
-        I = np.squeeze(I)
-        # print("found IDS:", I[:5])
+        print("found IDS:", I)
         # similar
-        if similarity == 0 and true_id in I:
-            tp += 1
-        # different
-        elif similarity == 3 and true_id not in I:
-            tn += 1
-        # similar negative
-        elif similarity == 0 and true_id not in I:
-            fp += 1
-        # different negative
-        elif similarity == 3 and true_id in I:
-            fn += 1
+        # if similarity == 0 and true_id in I[-5:]:
+        #     tp += 1
+        # # different
+        # elif similarity == 3 and true_id not in I:
+        #     tn += 1
+        # # similar negative
+        # elif similarity == 0 and true_id not in I:
+        #     fp += 1
+        # # different negative
+        # elif similarity == 3 and true_id in I:
+        #     fn += 1
 
     return tp, tn, fp, fn
 
@@ -65,11 +65,11 @@ class Test(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-
+        self.tokenizer, self.model, self.this_device, self.max_len = prepare_tok_model()
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
         print("(len data)", len(data))
-        data = data[:500]
+        data = data[:100]
         data = data[(data.label == 0) | (data.label == 3)]
         self.dup = ("duplicates:", len(data.label[data.label == 0]))
         self.diff = ("diffs:", len(data.label[data.label == 3]))
@@ -77,25 +77,26 @@ class Test(TestCase):
 
         self.path = "./test.index"
         self.first_posts = list(data.first_post)
-        index_with_faiss_to_file(self.first_posts, list(np.arange(0, len(self.first_posts))),
-                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1)
-
         self.second_posts = data.second_post
         self.ids = data.label
         self.indexes = list(np.arange(0, len(self.second_posts)))
 
-    def test_body(self):
-        tokenizer, model, this_device, max_len = prepare_tok_model()
+    def test_body_faiss(self):
+
+        index_with_faiss_to_file(self.first_posts, list(np.arange(0, len(self.first_posts))),
+                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1)
+
         indexes = [read_index(self.path)]
-        data = [sanitize_html_for_web(i, display_code=False) for i in tqdm(self.second_posts)]
-        encoded_question = encode_questions(data, tokenizer, model, max_length=max_len, this_device=this_device)
+        # data = [sanitize_html_for_web(i, display_code=False) for i in tqdm(self.second_posts)]
+        encoded_question = encode_questions(self.second_posts, self.tokenizer, self.model, max_length=self.max_len,
+                                            this_device=self.this_device)
         tp, tn, fp, fn = 0, 0, 0, 0
         for id, index, post in (zip(self.ids, tqdm(self.indexes), encoded_question)):
-            tp1, tn1, fp1, fn1 =test_faiss_indexed_data(
+            tp1, tn1, fp1, fn1 = test_faiss_indexed_data(
                 indexes=indexes,
                 question=post,
                 true_id=index,
-                similarity=id, tokenizer=tokenizer, model=model, this_device=this_device
+                similarity=id, tokenizer=self.tokenizer, model=self.model, this_device=self.this_device
             )
             tp += tp1
             tn += tn1
@@ -105,3 +106,29 @@ class Test(TestCase):
         print(*self.diff)
         print("tp", tp, "fp", fp)
         print("fn", fn, "tn", tn)
+
+    def test_body_mqdd(self):
+
+
+        dup = 0
+        diff = 0
+        for first_post, second_post, label in zip(self.first_posts, self.second_posts, self.ids):
+            first_post = tokenize_question(first_post, self.tokenizer, self.max_len)
+            second_post = tokenize_question(second_post, self.tokenizer, self.max_len)
+            first_post.to(self.this_device)
+            second_post.to(self.this_device)
+            first_post = {k + "1": v for k,v in zip(second_post.data.keys(), second_post.data.values())}
+
+            res_id = self.model.forward({**second_post.data, **first_post})
+
+            if label == 0 and res_id == "DUPLICATE":
+                dup += 1
+            # different
+            else:
+                diff += 1
+
+        print(*self.dup)
+        print(*self.diff)
+        print("dup", dup)
+        print("diff", diff)
+

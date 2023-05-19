@@ -57,5 +57,5 @@ class ClsHeadModelMQDD(torch.nn.Module):
         x = self._relu(self._dense(x))
         x = self._dropout2(x)
         x = self._out(x)
-        x = x.detach().numpy()
+        x = x.detach().cpu().numpy()
         return "DUPLICATE" if x[0][0] < x[0][1] else "different"
