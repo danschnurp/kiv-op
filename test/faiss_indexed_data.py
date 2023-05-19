@@ -3,7 +3,10 @@ from unittest import TestCase
 
 import numpy as np
 from faiss import read_index, extract_index_ivf
+from pandas import read_parquet
+from tqdm import tqdm
 
+from data.faiss_indexer import index_with_faiss_to_file
 from data.question_encoder import encode_question, prepare_tok_model
 from data.utils import sanitize_html_for_web
 
@@ -25,7 +28,7 @@ def merge_invlists(il_src, il_dest):
         )
 
 
-def test_faiss_indexed_data(index_data_path, question, true_id):
+def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, model, this_device):
     """
     This function takes in an indexed data path, a question, an ID and performs a test if data are indexed correctly.
 
@@ -34,37 +37,72 @@ def test_faiss_indexed_data(index_data_path, question, true_id):
     :param true_id: The true ID of the document that should be the top result for the given question
     """
 
-    indexes = [read_index(index_data_path + "/" + i) for i in os.listdir(index_data_path)]
-
     normalized_question = np.zeros((1, indexes[0].d))
-    tokenizer, model, _, this_device = prepare_tok_model()
-    question = sanitize_html_for_web(question.replace("\n", ""))
+
+    question = sanitize_html_for_web(question, display_code=False)
     encoded_question = encode_question(question=question, tokenizer=tokenizer,
                                        model=model, this_device=this_device)
     normalized_question[0, :len(encoded_question)] = encoded_question.astype(np.float32)
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
     for index in indexes:
-        D, I = index.search(normalized_question, 5) # actual search
-        print("ID:", true_id)
-        I = np.squeeze(I[:5])
-        print("found IDS:", I[:5])
+        D, I = index.search(normalized_question, 10)  # actual search
+        # print("ID:", true_id)
+        I = np.squeeze(I[:10])
+        # print("found IDS:", I[:5])
+        # similar
+        if similarity in [0] and true_id in I:
+            tp += 1
+        # different
+        elif similarity == 3 and true_id not in I:
+            tn += 1
+        # similar negative
+        elif similarity in [0] and true_id not in I:
+            fp += 1
+        # different negative
+        elif similarity == 3 and true_id in I:
+            fn += 1
+
+    return tp, tn, fp, fn
 
 
 class Test(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.path = "C:/Users/dartixus/Downloads/apple.stackexchange.com/faiss_indexed_data/Posts"
+
+        # Reading the parquet file and storing it in a dataframe.
+        data = read_parquet("SODD_dev.parquet.gzip")
+
+        data = data[:500]
+
+        self.path = "./test.index"
+        self.first_posts = list(data.first_post)
+        index_with_faiss_to_file(self.first_posts, list(np.arange(0, len(self.first_posts))),
+                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1, 0,
+                                 len(self.first_posts))
+
+        self.second_posts = data.second_post
+        self.ids = data.label
+        self.indexes = list(np.arange(0, len(self.second_posts)))
 
     def test_body(self):
-        test_faiss_indexed_data(
-            index_data_path=self.path,
-            question="""&lt;p&gt;The VPN software I use for work (&lt;a href=&quot;http://www.lobotomo.com/products/IPSecuritas/&quot;&gt;IPSecuritas&lt;/a&gt;) requires me to turn off Back To My Mac to start it's connection, so I frequently turn off Back To My Mac in order to use my VPN connection (the program does this for me). I forget to turn it back on however and I'd love to know if there was something I could run (script, command) to turn it back on.&lt;/p&gt;&#xA;""",
-            true_id=2
-        )
+        tokenizer, model, _, this_device = prepare_tok_model()
+        indexes = [read_index(self.path)]
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for id, index, post in (zip(self.ids, tqdm(self.indexes), self.second_posts)):
+            tp1, tn1, fp1, fn1 =test_faiss_indexed_data(
+                indexes=indexes,
+                question=post,
+                true_id=index,
+                similarity=id, tokenizer=tokenizer, model=model, this_device=this_device
+            )
+            tp += tp1
+            tn += tn1
+            fp += fp1
+            fn += fn1
 
-    def test_body2(self):
-        test_faiss_indexed_data(
-            index_data_path=self.path,
-            question="""&lt;p&gt;As of Snow Leopard, this from any application. From the Actions Library, add the 'Launch Application' action to the workflow. Select the 'Terminal' application in the drop-down list of Applications. Save your new service and then assign a keyboard shortcut to it in:&lt;br&gt;&#xA;&lt;code&gt;System Preferences -&amp;gt; Keyboard -&amp;gt; Keyboard Shortcuts -&amp;gt; Services&lt;/code&gt;&lt;/p&gt;&#xA;"""
-            ,true_id=170
-        )
+        print("tp", tp, "fp", fp)
+        print("fn", fn, "tn", tn)
