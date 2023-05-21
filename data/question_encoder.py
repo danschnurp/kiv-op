@@ -53,14 +53,14 @@ def prepare_tok_model(max_length=512):
         return_token_type_ids=True,
         truncation=True, return_tensors="pt")
 
-    this_device = control_torch()
+    this_device = "cpu"
     model.to(this_device)
     tokenized_question_example.to(this_device)
 
     return tokenizer, model, tokenized_question_example, this_device
 
 
-def encode_question(question, tokenizer, model, max_length=512, this_device="cpu"):
+def encode_question(question, tokenizer, model, max_length=600, this_device="cpu"):
     """
     This function encodes a given question using a tokenizer and a pre-trained language model, with a specified maximum
     length.

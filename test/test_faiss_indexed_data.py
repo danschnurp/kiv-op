@@ -4,7 +4,7 @@ import numpy as np
 from faiss import read_index
 from pandas import read_parquet
 from tqdm import tqdm
-
+from sklearn.metrics import precision_score, recall_score, f1_score
 from data.faiss_indexer import index_with_faiss_to_file
 from data.question_encoder import encode_question, prepare_tok_model
 from data.utils import sanitize_html_for_web
@@ -35,7 +35,6 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     :param question: The question for which we want to find the most similar data point in the indexed data
     :param true_id: The true ID of the document that should be the top result for the given question
     """
-    question = sanitize_html_for_web(question, display_code=False)
     encoded_question = encode_question(question=question, tokenizer=tokenizer,
                                        model=model, this_device=this_device)
     normalized_question = np.expand_dims(encoded_question, axis=0)
@@ -44,7 +43,7 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
     fp = 0
     fn = 0
     for index in indexes:
-        I = index.search(normalized_question, 5)  # actual search
+        _, I = index.search(normalized_question, 5)  # actual search
         # print("ID:", true_id)
         I = np.squeeze(I)
         # print("found IDS:", I[:5])
@@ -61,7 +60,7 @@ def test_faiss_indexed_data(indexes, question, true_id, similarity, tokenizer, m
         elif similarity == 3 and true_id in I:
             fn += 1
 
-    return tp, tn, fp, fn
+    return tp, tn, fp, fn, I[0]
 
 
 class Test(TestCase):
@@ -72,7 +71,7 @@ class Test(TestCase):
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
         print("(len data)", len(data))
-        data = data[:1000]
+        data = data[:100]
         data = data[(data.label == 0) | (data.label == 3)]
         self.dup = ("duplicates:", len(data.label[data.label == 0]))
         self.diff = ("diffs:", len(data.label[data.label == 3]))
@@ -80,29 +79,63 @@ class Test(TestCase):
 
         self.path = "./test.index"
         self.first_posts = list(data.first_post)
-        index_with_faiss_to_file(self.first_posts, list(np.arange(0, len(self.first_posts))),
-                                 "C:/Users/dartixus/PycharmProjects/kiv-op/test/test.index", 1)
-
+        self.indexes = list(data.axes[0])
         self.second_posts = data.second_post
         self.ids = data.label
-        self.indexes = list(np.arange(0, len(self.second_posts)))
+
 
     def test_body(self):
         tokenizer, model, _, this_device = prepare_tok_model()
+        index_with_faiss_to_file(self.first_posts, self.indexes,
+                                 "./test.index", 1)
         indexes = [read_index(self.path)]
         tp, tn, fp, fn = 0, 0, 0, 0
-        for id, index, post in (zip(self.ids, tqdm(self.indexes), self.second_posts)):
-            tp1, tn1, fp1, fn1 =test_faiss_indexed_data(
+        pred = []
+        for id, index, post in (zip(self.ids, self.indexes, self.second_posts)):
+            post = sanitize_html_for_web(post, display_code=False)
+            tp1, tn1, fp1, fn1, pred1 =test_faiss_indexed_data(
                 indexes=indexes,
                 question=post,
                 true_id=index,
-                similarity=id, tokenizer=tokenizer, model=model, this_device=this_device
+                similarity=id, tokenizer=tokenizer, model=model, this_device="cpu"
             )
             tp += tp1
             tn += tn1
             fp += fp1
             fn += fn1
+            pred.append(pred1)
+
+        assert self.print_stats(tp, tn, fp, fn, pred) > 0.7
+
+    def test_body_no_sanitizing(self):
+        tokenizer, model, _, this_device = prepare_tok_model()
+        index_with_faiss_to_file(self.first_posts, self.indexes,
+                                 "./test.index", 1, sanitize=False)
+        indexes = [read_index(self.path)]
+        tp, tn, fp, fn = 0, 0, 0, 0
+        pred = []
+        for id, index, post in (zip(self.ids, self.indexes, self.second_posts)):
+            tp1, tn1, fp1, fn1, pred1 =test_faiss_indexed_data(
+                indexes=indexes,
+                question=post,
+                true_id=index,
+                similarity=id, tokenizer=tokenizer, model=model, this_device="cpu"
+            )
+            tp += tp1
+            tn += tn1
+            fp += fp1
+            fn += fn1
+            pred.append(pred1)
+
+        assert self.print_stats(tp, tn, fp, fn, pred) > 0.7
+
+    def print_stats(self, tp, tn, fp, fn, pred):
+        accuracy = (tp + tn) / (self.dup[1] + self.diff[1])
+        f1_scores = f1_score(self.ids, pred, average='macro')
         print(*self.dup)
         print(*self.diff)
         print("tp", tp, "fp", fp)
         print("fn", fn, "tn", tn)
+        print("accuracy", accuracy)
+        print("f1_scores", f1_scores)
+        return accuracy
