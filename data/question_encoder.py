@@ -60,7 +60,7 @@ def prepare_tok_model(max_length=512):
     return tokenizer, model, tokenized_question_example, this_device
 
 
-def encode_question(question, tokenizer, model, max_length=600, this_device="cpu"):
+def encode_question(question, tokenizer, model, max_length=512, this_device="cpu"):
     """
     This function encodes a given question using a tokenizer and a pre-trained language model, with a specified maximum
     length.
@@ -94,6 +94,42 @@ def encode_question(question, tokenizer, model, max_length=600, this_device="cpu
     _, encoded_question_result = model(**encoded_question)
 
     return np.squeeze(encoded_question_result.detach().cpu().numpy().tolist())
+
+
+def encode_classic(question, tokenizer):
+    max_length = 512
+
+    # Encoding the question into a list of integers.
+    encoded_question = tokenizer.encode(
+        question,
+        max_length=max_length,
+        truncation=True)
+
+    # Preparing the encoded question for the model.
+    encoded_question = tokenizer.prepare_for_model(
+        encoded_question,
+        [],
+        max_length=max_length,
+        padding="max_length",
+        return_token_type_ids=True,
+        truncation=True, return_tensors="pt")
+
+    encoded_question.data["input_ids" + str(hash(question))] = torch.reshape(encoded_question.data["input_ids"],
+                                                                             (1,
+                                                                              encoded_question.data["input_ids"].shape[
+                                                                                  0]))
+    encoded_question.data["attention_mask" + str(hash(question))] = torch.reshape(
+        encoded_question.data["attention_mask"],
+        (1, encoded_question.data["attention_mask"].shape[0]))
+    encoded_question.data["token_type_ids" + str(hash(question))] = torch.reshape(
+        encoded_question.data["token_type_ids"],
+        (1, encoded_question.data["token_type_ids"].shape[0]))
+
+    del encoded_question.data["input_ids"]
+    del encoded_question.data["attention_mask"]
+    del encoded_question.data["token_type_ids"]
+
+    return encoded_question
 
 
 def encode_questions(question, tokenizer, model, tokenized_question_example, this_device, batch_size=1, max_length=512):

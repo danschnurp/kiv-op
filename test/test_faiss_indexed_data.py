@@ -1,13 +1,15 @@
 from unittest import TestCase
 
 import numpy as np
+import torch
 from faiss import read_index
 from pandas import read_parquet
 from tqdm import tqdm
 from sklearn.metrics import precision_score, recall_score, f1_score
 from data.faiss_indexer import index_with_faiss_to_file
-from data.question_encoder import encode_question, prepare_tok_model
+from data.question_encoder import encode_question, prepare_tok_model, encode_classic
 from data.utils import sanitize_html_for_web
+from web.search.brain.neural_loader import load_nett
 
 
 def merge_invlists(il_src, il_dest):
@@ -131,11 +133,34 @@ class Test(TestCase):
 
     def print_stats(self, tp, tn, fp, fn, pred):
         accuracy = (tp + tn) / (self.dup[1] + self.diff[1])
-        f1_scores = f1_score(self.ids, pred, average='macro')
         print(*self.dup)
         print(*self.diff)
         print("tp", tp, "fp", fp)
         print("fn", fn, "tn", tn)
         print("accuracy", accuracy)
-        print("f1_scores", f1_scores)
         return accuracy
+
+    def test_MQDD(self):
+        model, tokenizer, position_ids = load_nett(model_location="C:/Users/dartixus/PycharmProjects/kiv-op/web/search/brain/model.pt")
+        max_len = int(len(torch.squeeze(position_ids)) / 2.)
+        print("max_len", max_len)
+        tp, tn, fp, fn = 0, 0, 0, 0
+        pred = []
+        for first, second, label in zip(self.first_posts, self.second_posts, tqdm(self.ids)):
+            first = encode_classic(first, tokenizer)
+            second = encode_classic(second, tokenizer)
+            res_id = model.forward({**first.data, **second.data})
+            if res_id == "DUPLICATE" and label == 0:
+                tp += 1
+            # different
+            elif res_id == "different" and label == 3:
+                tn += 1
+
+            elif res_id == "DUPLICATE" and label != 0:
+                fp += 1
+            # different negative
+            elif res_id == "different" and label == 3:
+                fn += 1
+            pred.append(res_id)
+
+        assert self.print_stats(tp, tn, fp, fn, pred) > 0.7
