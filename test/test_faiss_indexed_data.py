@@ -159,7 +159,7 @@ class Test(TestCase):
             elif res_id == "DUPLICATE" and label != 0:
                 fp += 1
             # different negative
-            elif res_id == "different" and label == 3:
+            elif res_id == "different" and label != 3:
                 fn += 1
             pred.append(res_id)
 
