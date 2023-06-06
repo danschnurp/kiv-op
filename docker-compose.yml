@@ -1,0 +1,37 @@
+version: "3.0"
+
+services:
+
+  elasticsearch:
+    container_name: elasticsearch-container
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+    networks:
+      - es-net
+    hostname: elastic
+    ports:
+      - "9200:9200"
+
+  logstash:
+    container_name: logstash-container
+    image: docker.elastic.co/logstash/logstash:7.17.10
+    volumes:
+          - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+          - ./logstash/pipelines:/usr/share/logstash/pipelines/:ro,Z
+          - ./logstash/data:/usr/share/logstash/data/:rw,Z
+    environment:
+#     PAGE variable is name of indexed dataset, so if will be used stck overflow in future...
+#     needs to be changed to StackOverflow or something else
+      PAGE: gamedev
+    networks:
+      - es-net
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+
+networks:
+  es-net:
+    driver: bridge
