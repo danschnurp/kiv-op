@@ -2,6 +2,13 @@ version: "3.0"
 
 services:
 
+  siamese-search-webapp:
+    build: ./web
+    depends_on:
+      - logstash
+    ports:
+      - "8000:8000"
+
   elasticsearch:
     container_name: elasticsearch-container
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10

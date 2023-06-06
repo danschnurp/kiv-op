@@ -1,10 +1,8 @@
-import time
 
 import numpy as np
 
-from data.documents import Post, PostLink
-from web.search.apps import SearchConfig
-from web.search.brain.question_encoder import encode_question
+from .documents import Post, PostLink
+from .apps import SearchConfig
 
 
 def __search_fulltext(search_text, post_start, post_end, request, date_filter, siamese_search=False):
@@ -56,48 +54,6 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
                         #     result_posts[j]["linked_posts"].append(i['related_question_id'])
                         #     result_posts[j]["linked_posts_titles"].append(i['related_question_title'])
     # todo issue with multiple parsing linked posts with for pagination
-
-    # if siamese_search:
-    #     return __search_siamese(result_posts)
-    return result_posts
-
-
-def __search_siamese(result_posts: dict) -> dict:
-    """
-    This function takes in a dictionary of posts and a search text, and returns a dictionary of posts that contain the
-    "similarity" tag
-    :param result_posts: This is the dictionary of posts that we got from the previous function
-    :type result_posts: dict
-    """
-    encoded_posts = [
-        encode_question(post["text"], SearchConfig.tokenizer) for post in result_posts]
-    t1 = time.time()
-    combinations = {}
-    # creates variation pairs for (first 2 and all) because it is still slow
-    for index, i in enumerate(encoded_posts[:2]):
-        for jndex, j in enumerate(encoded_posts):
-            if i != j:
-                combinations[str(index) + "_" + str(jndex)] = [i, j]
-    # searching for related questions among the results
-    result_combinations = [SearchConfig.model.forward(dict(out[0].data, **out[1].data))
-                           for out in combinations.values()]
-    # assign duplicate occurrences
-    for combination, result in zip(combinations.keys(), result_combinations):
-        if "DUPLICATE" == result:
-            post = result_posts[int(combination.split("_")[0])]
-            if "related_question_ids" in post and "related_question_titles" in post:
-                post["related_question_ids"].append(result_posts[int(combination.split("_")[1])]["post_ID"])
-                post["related_question_titles"].append(result_posts[int(combination.split("_")[1])]["title"])
-            else:
-                post["related_question_ids"] = [result_posts[int(combination.split("_")[1])]["post_ID"]]
-                post["related_question_titles"] = [result_posts[int(combination.split("_")[1])]["title"]]
-
-    # zip for better structure parsing to template
-    for post in result_posts:
-        if "related_question_ids" in post and "related_question_titles" in post:
-            post["related_questions"] = zip(post["related_question_ids"], post["related_question_titles"])
-    print(time.time() - t1)
-
     return result_posts
 
 
