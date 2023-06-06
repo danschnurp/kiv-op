@@ -57,10 +57,9 @@ def __search_fulltext(search_text, post_start, post_end, request, date_filter, s
                         #     result_posts[j]["linked_posts_titles"].append(i['related_question_title'])
     # todo issue with multiple parsing linked posts with for pagination
 
-    if siamese_search:
-        return __search_siamese(result_posts)
-    else:
-        return result_posts
+    # if siamese_search:
+    #     return __search_siamese(result_posts)
+    return result_posts
 
 
 def __search_siamese(result_posts: dict) -> dict:
