@@ -3,7 +3,7 @@
 
 How to run it:
 
-- save data for indexing from [Google drive](https://drive.google.com/drive/folders/19_TiBVPyBIsaVLH1p_Pv6271HpJvGUI7)
+- save data for indexing from [Google drive](https://drive.google.com/drive/folders/19_TiBVPyBIsaVLH1p_Pv6271HpJvGUI7) or [One Drive](https://onedrive.live.com/?authkey=%21AHBhGMYxGeNPeK0&id=8D9B8AAC1B2B5597%2185158&cid=8D9B8AAC1B2B5597)
 and faiss indexed data from same zip. 
 - put **Body.index** to `<project_dir>/web/search/indexed_data/Body.index`
 - put (Badges.xml
