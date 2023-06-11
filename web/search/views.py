@@ -3,8 +3,8 @@ from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from elasticsearch_dsl.connections import connections
 
-from data.documents import Post, User, Comment, ES_HOSTS, ES_LOGIN, PostLink
-from data.utils import sanitize_html_for_web
+from .documents import Post, User, Comment, ES_HOSTS, ES_LOGIN
+from .utils import sanitize_html_for_web
 from .search import search, search_siamese_faissly, get_post_links_from_users
 
 import datetime
