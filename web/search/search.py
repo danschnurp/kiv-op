@@ -66,12 +66,15 @@ def search_siamese_faissly(post_id, max_results=5):
     :param max_results: The maximum number of search results to return, defaults to 5 (optional)
     """
     normalized_post = np.zeros((1, SearchConfig.indexed_post_bodies.d))
-    vectorized_post = SearchConfig.indexed_post_bodies.reconstruct(post_id)
-    normalized_post[0, :len(vectorized_post)] = vectorized_post
+    try:
+        vectorized_post = SearchConfig.indexed_post_bodies.reconstruct(post_id)
+        normalized_post[0, :len(vectorized_post)] = vectorized_post
 
-    _, result_ids, _ = SearchConfig.indexed_post_bodies.search_and_reconstruct(normalized_post, max_results)
-    result_ids = np.squeeze(result_ids)
-    return result_ids[result_ids != post_id]
+        _, result_ids, _ = SearchConfig.indexed_post_bodies.search_and_reconstruct(normalized_post, max_results)
+        result_ids = np.squeeze(result_ids)
+        return result_ids[result_ids != post_id]
+    except Exception:
+        return []
 
 
 def get_post_links_from_users(result_post, page):
