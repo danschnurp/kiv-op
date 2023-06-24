@@ -133,3 +133,7 @@ SODD_dev.parquet.gzip
 model.pt
 /logstash/data/
 /web/search/indexed_data/
+/logstash/data_for_index/Comments.xml
+/logstash/data_for_index/PostLinks.xml
+/logstash/data_for_index/Posts.xml
+/logstash/data_for_index/Users.xml

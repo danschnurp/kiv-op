@@ -15,6 +15,8 @@ Tags.xml
 Users.xml
 Votes.xml) to `<project_dir>/logstash/data/` directory
 
+- in `docker-compose.yml` set `PAGE: tex` to tor or gamedev or something else 
+
 - run  `docker-compose up`  
 
 - wait until logstash is finished... 
