@@ -3,9 +3,56 @@
             <div class="intro">
                 <h6 class="text-center">Not found what you want? <br><br>
                     <a class="login btn btn-primary text-center"
-                            href="https://{{ page }}.stackexchange.com/users/login">Post Your Question</a></h6>
+                            href="https://{{ page }}.stackexchange.com/users/login">Login to your account</a></h6>
             </div>
         </div>
+ <div class="container mt-4">
+        <div class="centered-form">
+            <div>
+                <div id="accordion">
+                    <div class="card">
+                        <div class="card-header" id="titleHeading">
+                            <h5 class="mb-0">
+                                <button class="btn btn-primary" data-toggle="collapse" data-target="#titleCollapse" aria-expanded="true" aria-controls="titleCollapse">
+                                    Post Your Question Directly
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="titleCollapse" class="collapse" aria-labelledby="titleHeading" data-parent="#accordion">
+                            <div class="card-body">
+                                <form method="get" action="{% url 'search:post_question_request' %}">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="title">Title:</label>
+                                        <input type="text" id="title" name="title" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="body">Body:</label>
+                                        <textarea id="body" name="body" class="form-control" rows="6" required></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="code">Code:</label>
+                                        <textarea id="code" name="code" class="form-control" rows="6" required></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="page">Page:</label>
+                                        <input type="text" id="page" name="page" class="form-control" placeholder="{{ page }}" required>
+
+
+                                    </div>
+
+
+
+
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% for post in posts %}
 <div class="row shadow-sm post_list_item_container" style="margin-bottom: 15px;">
     <div class="col post_list_item">

@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from elasticsearch_dsl.connections import connections
 
 from .documents import Post, User, Comment, ES_HOSTS, ES_LOGIN
+from .post_question import post_question
 from .utils import sanitize_html_for_web
 from .search import search, search_siamese_faissly, get_post_links_from_users
 
@@ -305,3 +306,11 @@ def explore_questions_content_loader(request, page=1):
     html = render_to_string('search/posts_displays.html', {"posts": posts[:-1]})
     json_dict = {"html": html, "has_next_page": has_next_page, "has_previous_page": has_previous_page}
     return HttpResponse(json.dumps(json_dict))
+
+
+def post_question_request(request):
+    if request.GET.get("title", None) is not None and request.GET.get("body", None) is not None \
+            and request.GET.get("code", None) is not None:
+        post_question(request.GET.get("title"), request.GET.get("body"),
+                      request.GET.get("code"), request.GET.get("site"))
+        return render(request, "search/index.html", None)

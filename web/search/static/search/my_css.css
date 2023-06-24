@@ -273,3 +273,11 @@ pre {
     word-wrap: break-word;
     margin: 25px;
 }
+
+
+.centered-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }

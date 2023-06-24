@@ -14,5 +14,6 @@ urlpatterns = [
     path('api/explore_questions/', views.explore_questions_content_loader, name="explore_questions_content_loader"),
     path('api/explore_questions/<int:page>/', views.explore_questions_content_loader, name="explore_questions_content_loader"),
     path('detail/<str:page>/<int:post_id>/', views.detail, name="detail"),
+    path('question_search/post_question_request', views.post_question_request, name="post_question_request"),
 
 ]
