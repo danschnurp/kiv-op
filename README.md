@@ -26,12 +26,9 @@ Votes.xml) to `<project_dir>/logstash/data/` directory
 Notes 
 
 - if the app need to be restarted: 
-  - delete ( dead_letter_queue
-plugins
-queue
-.lock
-uuid) from `<project_dir>/logstash/data/` directory
+  - delete ( **dead_letter_queue plugins queue .lock uuid**) from `<project_dir>/logstash/data/` directory and on docker `/usr/share/logstash/data/` like ont the picture bellow
 
+![alt_text](imgs/delete.jpg)
 
 
 ### What is done?
