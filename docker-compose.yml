@@ -30,7 +30,10 @@ services:
           - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
           - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro,Z
           - ./logstash/pipelines:/usr/share/logstash/pipelines:ro,Z
-          - ./logstash/data:/usr/share/logstash/data/:rw,Z
+          - ./logstash/data/Users.xml:/usr/share/logstash/data/Users.xml:rw,Z
+          - ./logstash/data/Posts.xml:/usr/share/logstash/data/Posts.xml:rw,Z
+          - ./logstash/data/Comments.xml:/usr/share/logstash/data/Comments.xml:rw,Z
+          - ./logstash/data/PostLinks.xml:/usr/share/logstash/data/PostLinks.xml:rw,Z
     environment:
 #     PAGE variable is name of indexed dataset, so if will be used stck overflow in future...
 #     needs to be changed to StackOverflow or something else
