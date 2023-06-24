@@ -19,6 +19,10 @@ Votes.xml) to `<project_dir>/logstash/data/` directory
 
 - wait until logstash is finished... 
 
+![alt_text](imgs/example.jpg)
+
+- like this picture above
+
 Notes 
 
 - if the app need to be restarted: 
