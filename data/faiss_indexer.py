@@ -8,8 +8,8 @@ import numpy as np
 from tqdm import tqdm
 from faiss import write_index, IndexFlatL2, IndexIVFFlat, METRIC_L2, IndexIDMap2
 
-from data.utils import make_output_dir, sanitize_html_for_web
-from data.question_encoder import encode_questions, prepare_tok_model, encode_question
+from utils import make_output_dir, sanitize_html_for_web
+from question_encoder import encode_questions, prepare_tok_model, encode_question
 
 
 def index_part(input_folder: str, xml_file_name: str, part: str, batch_size=4, offset=0., stop_at=float("inf"),
