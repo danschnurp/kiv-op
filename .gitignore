@@ -132,3 +132,4 @@ dmypy.json
 SODD_dev.parquet.gzip
 model.pt
 /logstash/data/
+/web/search/indexed_data/
