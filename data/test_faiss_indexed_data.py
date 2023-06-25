@@ -5,9 +5,9 @@ import torch
 from faiss import read_index
 from pandas import read_parquet
 from tqdm import tqdm
-from data.faiss_indexer import index_with_faiss_to_file
-from data.question_encoder import encode_question, prepare_tok_model
-from data.utils import sanitize_html_for_web
+from faiss_indexer import index_with_faiss_to_file
+from question_encoder import encode_question, prepare_tok_model
+from utils import sanitize_html_for_web
 from MQDD_model import load_nett, encode_classic
 
 
@@ -36,7 +36,7 @@ class Test(TestCase):
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
         print("(len data)", len(data))
-        data = data[:100]
+        data = data[:1000]
         data = data[(data.label == 0) | (data.label == 3)]
         self.dup = ("duplicates:", len(data.label[data.label == 0]))
         self.diff = ("diffs:", len(data.label[data.label == 3]))
