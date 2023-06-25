@@ -38,8 +38,8 @@ services:
 # ############################################################################################
     environment:
 #     PAGE variable is name of indexed dataset, so if will be used stck overflow in future...
-#     needs to be changed to StackOverflow or something else
-      PAGE: tex
+#     needs to be changed to StackOverflow or something else (dsp, tex, cooking, english...)
+      PAGE: dsp
 # #############################################################################################
       ELASTICSEARCH_PORT: 9200
     networks:

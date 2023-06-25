@@ -48,3 +48,16 @@ Notes
 
 - docker support of the web app
 
+
+## Create your index with data from [archive.org](https://archive.org/download/stackexchange)
+
+- there are scripts for this too!
+- `pip install -r ./data/requirements.txt`
+- `data/main_posts_faiss_indexer.py`
+
+`usage: main_posts_faiss_indexer.py [-h] -i INPUT_DIR_PATH [-b BATCH_SIZE] [-s STOP_AT] [--offset OFFSET] [-o OUTPUT_DIR_PATH]`
+                                   
+                                   
+
+
+
