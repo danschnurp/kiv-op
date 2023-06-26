@@ -24,7 +24,7 @@ SECRET_KEY = '(2-5o=&x@^x-_n28b_=#q8xn$rthb=k!n7wh!yj#cdh&8w-=g+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+# server host where ser runs (if there is floating address it may need both)
 ALLOWED_HOSTS = []
 
 
