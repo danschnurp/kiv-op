@@ -6,9 +6,8 @@
                             href="https://{{ page }}.stackexchange.com/users/login">Login to your account</a></h6>
             </div>
         </div>
- <div class="container mt-4">
-        <div class="centered-form">
-            <div>
+
+             <div class="container">
                 <div id="accordion">
                     <div class="card">
                         <div class="card-header" id="titleHeading">
@@ -19,7 +18,7 @@
                             </h5>
                         </div>
                         <div id="titleCollapse" class="collapse" aria-labelledby="titleHeading" data-parent="#accordion">
-                            <div class="card-body">
+                            <div class="card-body centered-form">
                                 <form method="get" action="{% url 'search:post_question_request' %}">
                                     {% csrf_token %}
                                     <div class="form-group">
@@ -37,13 +36,7 @@
                                     <div class="form-group">
                                         <label for="page">Page:</label>
                                         <input type="text" id="page" name="page" class="form-control" placeholder="{{ page }}" required>
-
-
                                     </div>
-
-
-
-
                                     <button type="submit" class="btn btn-primary">Submit</button>
                                 </form>
                             </div>
@@ -51,8 +44,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 {% for post in posts %}
 <div class="row shadow-sm post_list_item_container" style="margin-bottom: 15px;">
     <div class="col post_list_item">

@@ -34,7 +34,6 @@ services:
           - ./logstash/data_for_index/Posts.xml:/usr/share/logstash/data_for_index/Posts.xml:rw,Z
           - ./logstash/data_for_index/Comments.xml:/usr/share/logstash/data_for_index/Comments.xml:rw,Z
           - ./logstash/data_for_index/PostLinks.xml:/usr/share/logstash/data_for_index/PostLinks.xml:rw,Z
-          - ./logstash/data:/usr/share/logstash/data
 # ############################################################################################
     environment:
 #     PAGE variable is name of indexed dataset, so if will be used stck overflow in future...
