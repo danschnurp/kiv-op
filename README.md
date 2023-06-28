@@ -32,6 +32,9 @@ Notes
 
 - do not forget to edit in `web/SiameseSearchWeb/settings.py`
 
+- if css is not loaded, ensure privileges of `web/search/static/`
+- if there are no siemese posts found, ensure privileges of `web/search/indexed_data/Body.index`
+
 ![alt_text](imgs/delete.jpg)
 
 
