@@ -6,6 +6,10 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN chmod 777 ./search/indexed_data/Body.index
+
+RUN chmod 777  -R  ./search/static
+
 
 # Expose port 8000 for the web app
 EXPOSE 8000
