@@ -17,6 +17,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - "discovery.type=single-node"
+      - ES_JAVA_OPTS=-Xms3g -Xmx3g
     networks:
       - es-net
     hostname: elastic
