@@ -17,7 +17,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - "discovery.type=single-node"
-      - ES_JAVA_OPTS=-Xms3g -Xmx3g
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
     networks:
       - es-net
     hostname: elastic
@@ -48,7 +48,7 @@ services:
       - "5044:5044"
     depends_on:
       - elasticsearch
-    restart: always
+
 
 networks:
   es-net:
