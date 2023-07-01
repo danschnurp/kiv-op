@@ -30,8 +30,8 @@ Notes
 - if the app need to be restarted: 
   - delete ( **dead_letter_queue plugins queue .lock uuid**) from `<project_dir>/logstash/data/` directory and on docker `/usr/share/logstash/data/` like ont the picture bellow
 
-- do not forget to edit in `web/SiameseSearchWeb/settings.py`
-
+- do not forget to edit allowed hosts in `web/SiameseSearchWeb/settings.py`
+- if you want api to stack exchange, place the acces token and key to `web/search/apps.py`
 - if css is not loaded, ensure privileges of `web/search/static/`
 - if there are no siemese posts found, ensure privileges of `web/search/indexed_data/Body.index`
 
