@@ -7,18 +7,17 @@
             </div>
         </div>
 
-             <div class="container">
-                <div id="accordion">
+                <div id="accordion" class="container">
                     <div class="card">
-                        <div class="card-header" id="titleHeading">
-                            <h5 class="mb-0">
-                                <button class="btn btn-primary" data-toggle="collapse" data-target="#titleCollapse" aria-expanded="true" aria-controls="titleCollapse">
+                        <div class="card-header text-center" id="titleHeading">
+                            <h5>
+                                <button class="btn btn-primary center" data-toggle="collapse" data-target="#titleCollapse" aria-expanded="true" aria-controls="titleCollapse">
                                     Post Your Question Directly
                                 </button>
                             </h5>
                         </div>
                         <div id="titleCollapse" class="collapse" aria-labelledby="titleHeading" data-parent="#accordion">
-                            <div class="card-body centered-form">
+                            <div class="card-body">
                                 <form method="get" action="{% url 'search:post_question_request' %}">
                                     {% csrf_token %}
                                     <div class="form-group">
@@ -43,7 +42,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
 {% for post in posts %}
 <div class="row shadow-sm post_list_item_container" style="margin-bottom: 15px;">
     <div class="col post_list_item">
