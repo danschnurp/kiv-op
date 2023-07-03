@@ -1,4 +1,4 @@
-Django~=4.1.7
+Django~=4.2.3
 faiss-cpu~=1.7.3
 numpy~=1.25.0
 elasticsearch-dsl~=7.4.1
