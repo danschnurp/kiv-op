@@ -1,6 +1,6 @@
 Django~=4.1.7
 faiss-cpu~=1.7.3
-numpy~=1.25.0
+numpy~=1.25.1
 elasticsearch-dsl~=7.4.1
 beautifulsoup4~=4.11.2
 lxml~=4.9.2
