@@ -5,6 +5,7 @@ WORKDIR /usr/src/SiameseSearchWebapp
 COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 RUN chmod 777 ./search/indexed_data/Body.index
 

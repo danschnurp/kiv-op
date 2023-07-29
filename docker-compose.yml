@@ -2,14 +2,14 @@ version: "3.0"
 
 services:
 
-#  siamese-search-webapp:
-#    build: ./web
-#    depends_on:
-#      - elasticsearch
-#    ports:
-#      - "8000:8000"
-#    networks:
-#          - es-net
+  siamese-search-webapp:
+    build: ./web
+    depends_on:
+      - elasticsearch
+    ports:
+      - "8000:8000"
+    networks:
+          - es-net
 
   elasticsearch:
     container_name: elasticsearch-container
