@@ -6,7 +6,7 @@ from elasticsearch_dsl.connections import connections
 from .utils import sanitize_html_for_web
 
 #  elastic... this is docker named host
-ES_HOSTS = ["http://elastic:9200"]
+ES_HOSTS = ["http://localhost:9200"]
 ES_LOGIN = None
 
 html_strip = analyzer("html_strip", tokenizer="standard", filter=["stop", "lowercase", "snowball"],

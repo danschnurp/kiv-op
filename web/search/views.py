@@ -217,6 +217,7 @@ def question_search_content_loader(request, page=1):
     # get GET parameters
     search_type = request.GET.get("search_type", None)
     search_text = request.GET.get("search_text", None)
+    search_code = request.GET.get("search_code", None)
 
     # define the required search type
     if search_type is None:
@@ -227,6 +228,8 @@ def question_search_content_loader(request, page=1):
 
     if search_text is None:
         search_text = ""
+    if search_code is None:
+        search_code = ""
 
     page = page if page > 0 else 1
 
@@ -241,9 +244,9 @@ def question_search_content_loader(request, page=1):
         date_end = datetime.datetime.now()
 
     date_filter = {"start": date_start, "end": date_end}
-
+    print(page)
     # perform search
-    posts = search(search_type, search_text, page, POST_PER_PAGE, request, date_filter)
+    posts = search(search_type, search_text, search_code, page, POST_PER_PAGE, request, date_filter)
 
     # pagination settings and feed dict
     has_previous = True if page > 1 else False

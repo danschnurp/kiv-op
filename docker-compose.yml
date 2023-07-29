@@ -2,14 +2,14 @@ version: "3.0"
 
 services:
 
-  siamese-search-webapp:
-    build: ./web
-    depends_on:
-      - elasticsearch
-    ports:
-      - "8000:8000"
-    networks:
-          - es-net
+#  siamese-search-webapp:
+#    build: ./web
+#    depends_on:
+#      - elasticsearch
+#    ports:
+#      - "8000:8000"
+#    networks:
+#          - es-net
 
   elasticsearch:
     container_name: elasticsearch-container
@@ -39,7 +39,7 @@ services:
     environment:
 #     PAGE variable is name of indexed dataset, so if will be used stck overflow in future...
 #     needs to be changed to StackOverflow or something else (dsp, tex, cooking, english...)
-      PAGE: dsp
+      PAGE: gamedev
 # #############################################################################################
       ELASTICSEARCH_PORT: 9200
     networks:

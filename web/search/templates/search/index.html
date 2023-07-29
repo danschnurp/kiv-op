@@ -18,8 +18,12 @@
                 </div>
                 <div class="col-md-10 col-lg-8 col-xl-7 mx-auto">
                     <div class="form-row">
-                        <div class="col-12 col-md-9 mb-2 mb-md-0"><textarea name="search_text" class="form-control"></textarea></div>
-                        <div class="col-12 col-md-3">
+                        <div class="col-12 col-md-9 mb-2 mb-md-0"><textarea name="search_text" class="form-control" placeholder="text question..."></textarea>
+                        <br>
+                            <textarea name="search_code" class="form-control" placeholder="code..."></textarea>
+                        </div>
+                        <br>
+                        <div class="col-12 col-md-3" style="margin-top: 40px;">
                             <button class="btn btn-primary btn-block btn-lg" type="submit" style="height: 64px;">
                                 Search
                             </button>
@@ -35,7 +39,7 @@
                 </div>
                 <div class="col" id="siamese_checkbox_container">
                     <div class="form-check"><input class="form-check-input" type="radio" id="formCheck-2"
-                                                   name="search_type" value="siamese" disabled><label class="form-check-label"
+                                                   name="search_type" value="siamese"><label class="form-check-label"
                                                                                              for="formCheck-2">SiameseSearch (SLOW)</label>
                     </div>
                 </div>
