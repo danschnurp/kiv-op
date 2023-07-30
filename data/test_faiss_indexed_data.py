@@ -7,7 +7,7 @@ from pandas import read_parquet
 from tqdm import tqdm
 from faiss_indexer import index_with_faiss_to_file
 from question_encoder import encode_question, prepare_tok_model
-from utils import sanitize_html_for_web
+from utils import sanitize_html_for_index
 from MQDD_model import load_nett, encode_classic
 
 
@@ -59,7 +59,7 @@ class Test(TestCase):
         tp, tn, fp, fn = 0, 0, 0, 0
 
         for id, index, post in (zip(self.ids, self.indexes, self.second_posts)):
-            post = sanitize_html_for_web(post, display_code=False)
+            post = sanitize_html_for_index(post)
             tp1, tn1, fp1, fn1 = Test.compute_confusion_matrix(
                 indexes=indexes,
                 question=post,

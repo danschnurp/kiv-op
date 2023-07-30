@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from faiss import write_index, IndexFlatL2, IndexIVFFlat, METRIC_L2, IndexIDMap2
 
-from utils import make_output_dir, sanitize_html_for_web
+from utils import make_output_dir, sanitize_html_for_index
 from question_encoder import encode_questions, prepare_tok_model, encode_question
 
 
@@ -109,7 +109,7 @@ def index_with_faiss_to_file(input_data: list, ids: list, output_file_path: str,
     # sanitizing input data from html tags
     if sanitize:
         print("sanitizing input data from html tags")
-        input_data = [sanitize_html_for_web(i, display_code=False) for i in tqdm(input_data)]
+        input_data = [sanitize_html_for_index(i) for i in tqdm(input_data)]
     # encoding
     data = np.array([encode_question(i, tokenizer, model) for i in tqdm(input_data)])
     print(data.shape)

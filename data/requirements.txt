@@ -5,3 +5,6 @@ tqdm
 torch
 transformers
 pandas
+html5lib
+pyarrow
+fastparquet
