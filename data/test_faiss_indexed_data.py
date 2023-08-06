@@ -1,3 +1,4 @@
+import os.path
 from unittest import TestCase
 
 import numpy as np
@@ -53,8 +54,8 @@ class Test(TestCase):
         tests original faiss indexed data and sanitizing them first
         """
         tokenizer, model, _, this_device = prepare_tok_model()
-        index_with_faiss_to_file(self.first_posts, self.indexes,
-                                 "./test.index", 1)
+        if not os.path.exists(self.path):
+            index_with_faiss_to_file(self.first_posts, self.indexes, self.path, 1)
         indexes = [read_index(self.path)]
         tp, tn, fp, fn = 0, 0, 0, 0
 

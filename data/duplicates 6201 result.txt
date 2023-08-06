@@ -1,0 +1,5 @@
+duplicates: 6201
+diffs: 17513
+tp 200 fp 2
+fn 6001 tn 17511
+accuracy 0.7468583958842878
