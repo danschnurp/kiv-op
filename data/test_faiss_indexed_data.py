@@ -1,4 +1,5 @@
 import os.path
+import time
 from unittest import TestCase
 
 import numpy as np
@@ -52,7 +53,9 @@ class Test(TestCase):
     def test_body(self):
         """
         tests original faiss indexed data and sanitizing them first
+        time 126.09665489196777 sec
         """
+        t = time.time()
         tokenizer, model, _, this_device = prepare_tok_model()
         if not os.path.exists(self.path):
             index_with_faiss_to_file(self.first_posts, self.indexes, self.path, 1)
@@ -71,7 +74,7 @@ class Test(TestCase):
             tn += tn1
             fp += fp1
             fn += fn1
-
+        print("time", time.time() - t)
         assert self.print_stats(tp, tn, fp, fn) > 0.7
 
     def test_body_no_sanitizing(self):
@@ -142,13 +145,15 @@ class Test(TestCase):
     def test_MQDD(self):
         """
         tests original two tower model in MQDD_model.py
+        time 274.5472800731659 s
         """
+        t = time.time()
         model, tokenizer, position_ids = load_nett(model_location="./model.pt")
         max_len = int(len(torch.squeeze(position_ids)) / 2.)
         print("max_len", max_len)
         tp, tn, fp, fn = 0, 0, 0, 0
         pred = []
-        for first, second, label in zip(self.first_posts, self.second_posts, tqdm(self.ids)):
+        for first, second, label in zip(self.first_posts, self.second_posts, self.ids):
             first = encode_classic(first, tokenizer)
             second = encode_classic(second, tokenizer)
             res_id = model.forward({**first.data, **second.data})
@@ -164,5 +169,5 @@ class Test(TestCase):
             elif res_id == "different" and label != 3:
                 fn += 1
             pred.append(res_id)
-
+        print("time", time.time() - t)
         assert self.print_stats(tp, tn, fp, fn) > 0.7

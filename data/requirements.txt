@@ -8,3 +8,4 @@ pandas
 html5lib
 pyarrow
 fastparquet
+faiss-cpu
