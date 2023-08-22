@@ -62,22 +62,25 @@ def __search_fulltext(search_text, search_code, post_start, post_end, request, d
     """
 
     if siamese_search:
-        question = f"<CLS>{search_text}<SEP>{search_code}<SEP>"
-        vectorized_post = __encode_question(question, SearchConfig.tokenizer, SearchConfig.model, )
-        normalized_post = np.zeros((1, SearchConfig.indexed_post_bodies.d))
-        post_ids = list(run_faiss(normalized_post=normalized_post, vectorized_post=vectorized_post))
-        # gets siamese posts from vectored posts
-        posts_search = []
+        try:
+            question = f"<CLS>{search_text}<SEP>{search_code}<SEP>"
+            vectorized_post = __encode_question(question, SearchConfig.tokenizer, SearchConfig.model, )
+            normalized_post = np.zeros((1, SearchConfig.indexed_post_bodies.d))
+            post_ids = list(run_faiss(normalized_post=normalized_post, vectorized_post=vectorized_post))
+            # gets siamese posts from vectored posts
+            posts_search = []
 
-        for post_id in post_ids:
-            try:
-                post = Post.search().filter("term", post_ID=post_id).filter("match", page=page) \
-                    .filter("range", creation_date={"gte": date_filter["start"], "lt": date_filter["end"]}) \
-                    .execute()
-                result_posts = Post.get_display_info_for_posts(post.hits)
-                posts_search.extend(result_posts)
-            except Exception:
-                continue
+            for post_id in post_ids:
+                try:
+                    post = Post.search().filter("term", post_ID=post_id).filter("match", page=page) \
+                        .filter("range", creation_date={"gte": date_filter["start"], "lt": date_filter["end"]}) \
+                        .execute()
+                    result_posts = Post.get_display_info_for_posts(post.hits)
+                    posts_search.extend(result_posts)
+                except Exception:
+                    continue
+        except Exception:
+            return []
         return posts_search
 
     else:

@@ -253,8 +253,8 @@ def question_search_content_loader(request, page=1):
     has_next = True if len(posts) > POST_PER_PAGE else False
 
     # render the template
-    html = render_to_string('search/posts_displays.html', {"posts": posts[:-1]  if len(posts) < 1 else ""
-        , "page":posts[0]["page"]  if len(posts) < 1 else ""})
+    html = render_to_string('search/posts_displays.html', {"posts": posts[:-1]  if len(posts) > 0 else []
+        , "page":posts[0]["page"]  if len(posts) > 0 else []})
     json_dict = {"html": html, "has_next_page": has_next, "has_previous_page": has_previous}
 
     response = HttpResponse(json.dumps(json_dict))
