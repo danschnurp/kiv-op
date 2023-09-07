@@ -38,7 +38,7 @@ class Test(TestCase):
         # Reading the parquet file and storing it in a dataframe.
         data = read_parquet("SODD_dev.parquet.gzip")
         print("(len data)", len(data))
-        data = data[:1000]
+        data = data[:1000]  # todo how much amount data to test
         data = data[(data.label == 0) | (data.label == 3)]
         self.dup = ("duplicates:", len(data.label[data.label == 0]))
         self.diff = ("diffs:", len(data.label[data.label == 3]))
@@ -114,7 +114,7 @@ class Test(TestCase):
         fp = 0
         fn = 0
         for index in indexes:
-            _, I = index.search(normalized_question, 5)  # actual search
+            _, I = index.search(normalized_question, 5)  # todo actual search top 5
             # print("ID:", true_id)
             I = np.squeeze(I)
             # print("found IDS:", I[:5])

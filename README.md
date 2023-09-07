@@ -2,16 +2,11 @@
 
 LaTeX documentation [documentation.pdf](documentation.pdf)
 
-## Create your index with data from [archive.org](https://archive.org/download/stackexchange)
-
-- there are scripts for this too!
-- `pip install -r ./data/requirements.txt`
-- `data/main_posts_faiss_indexer.py`
-
-`usage: main_posts_faiss_indexer.py [-h] -i INPUT_DIR_PATH [-b BATCH_SIZE] [-s STOP_AT] [--offset OFFSET] [-o OUTPUT_DIR_PATH]`
-
-
 ## How to run:
+
+- run on meta-center cloud
+  - follow tutorial [here](https://docs.e-infra.cz/compute/openstack/getting-started/creating-first-infrastructure/)
+  - dont forget to setup [ MTU on docker](https://docs.e-infra.cz/compute/openstack/technical-reference/brno-site/faq/#changes-in-docker-daemon)
 
 Look at [releases](https://github.com/danschnurp/kiv-op/releases)
 
@@ -67,6 +62,16 @@ Look at [releases](https://github.com/danschnurp/kiv-op/releases)
 [//]: # (- if there are no siemese posts found, ensure privileges of `web/search/indexed_data/Body.index`)
 
 [//]: # (![alt_text]&#40;imgs/delete.jpg&#41;)
+
+
+## Create your index with data from [archive.org](https://archive.org/download/stackexchange)
+
+- there are scripts for this too!
+- `pip install -r ./data/requirements.txt`
+- `data/main_posts_faiss_indexer.py`
+
+`usage: main_posts_faiss_indexer.py [-h] -i INPUT_DIR_PATH [-b BATCH_SIZE] [-s STOP_AT] [--offset OFFSET] [-o OUTPUT_DIR_PATH]`
+
 
 
 ### What is done?
